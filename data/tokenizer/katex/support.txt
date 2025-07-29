@@ -1036,10 +1036,8 @@ Symbol_and_Punctuation:
   \blacklozenge
   \diagdown
   \P
-  \P
   \star
   \diagup
-  \S
   \S
   \bigstar
   \flat
@@ -1058,6 +1056,6 @@ Symbol_and_Punctuation:
   \circledS
   \spadesuit
   \spades
-  \textcircled a
+  \textcircled
   \maltese
   \minuso
