@@ -2,8 +2,10 @@
 \bf \mathbf
 \sf \mathsf
 \bold \mathbf
+\boldmath \mathbf
 \it \mathit
 \tt \mathtt
+\emph \mathit
 \Bbb \mathbb
 \frak \mathfrak
 \cal \mathcal

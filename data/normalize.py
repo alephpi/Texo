@@ -6,6 +6,7 @@ parent = Path(__file__).resolve().parent
 
 equiv_env_path = parent / "tokenizer/katex/equiv_envs.txt"
 equiv_symbol_path = parent / "tokenizer/katex/equiv_symbols.txt"
+ad_hoc_path = parent / "tokenizer/katex/ad_hoc.txt"
 
 def read_dict(path) -> dict[str, str]:
     print(path)
@@ -13,10 +14,12 @@ def read_dict(path) -> dict[str, str]:
     with open(path, "r", encoding='utf-8') as f:
         for line in f:
             line = line.strip()
-            token, ortho = line.split()
-            d[token] = ortho
+            token, ortho = line.split(maxsplit=1)
+            if ortho == "None":
+                d[token] = ''
     return d
 
+AD_HOCS = read_dict(ad_hoc_path)
 EQUIV_SYMBOLS = read_dict(equiv_symbol_path)
 EQUIV_ENVS = read_dict(equiv_env_path)
 
@@ -42,8 +45,10 @@ def normalize(data_path: Path=DATA_PATH):
                 tokens.extend(subtokens)
             else:
                 tokens.append(pretoken)
-        new_tokens = normalize_symbol(tokens)
-        new_lines.append(' '.join(new_tokens))
+        tokens = normalize_symbol(tokens)
+        tokens = normalize_left_right(tokens)
+        tokens = normalize_ad_hoc(tokens)
+        new_lines.append(' '.join(tokens))
     
     with open(data_path.with_name("train_normalized.txt"), 'w', encoding='utf-8') as f:
         for line in new_lines:
@@ -56,6 +61,25 @@ def normalize_env(text:str, normalizer:dict[str, str]=EQUIV_ENVS):
     for token, ortho in normalizer.items():
         text = text.replace(f"{{ {token} ", f"{ortho} {{ ").replace(f"{token} {{" ,f"{ortho} {{")
     return text
+
+def normalize_left_right(tokens: list[str]):
+    new_tokens: list[str] = []
+    for token in tokens:
+        if token.startswith("\\left") and token[-1] in ["(", ")", "[", "]", "|", "<", ">"]:
+            left = "\\left"
+            residue = token[-1]
+            new_tokens.extend((left, residue))
+        elif token.startswith("\\right") and token[-1] in ["(", ")", "[", "]", "|", "<", ">"]:
+            right = "\\right"
+            residue = token[-1]
+            new_tokens.extend((right, residue))
+        else:
+            new_tokens.append(token)
+
+    return new_tokens
+
+def normalize_ad_hoc(tokens: list[str], normalizer:dict[str, str]=AD_HOCS):
+    return [normalizer.get(token, token) for token in tokens]
 
 if __name__ == "__main__":
     normalize()

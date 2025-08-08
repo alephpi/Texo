@@ -20,7 +20,7 @@
 \doublecup \Cup
 \downarrow \darr
 \emptyset \empty
-\gets \leftarrow
+\gets \larr
 \gt >
 \hArr \Harr
 \image \Im
@@ -49,7 +49,7 @@
 \rightarrow \rarr
 \rparen )
 \rvert |
-\to \rightarrow
+\to \rarr
 \u \breve
 \uArr \Uarr
 \v \check
