@@ -7,6 +7,7 @@ parent = Path(__file__).resolve().parent
 equiv_env_path = parent / "tokenizer/katex/equiv_envs.txt"
 equiv_symbol_path = parent / "tokenizer/katex/equiv_symbols.txt"
 ad_hoc_path = parent / "tokenizer/katex/ad_hoc.txt"
+equiv_expression_path = parent / "tokenizer/katex/equiv_expressions.txt"
 
 def read_dict(path) -> dict[str, str]:
     print(path)
@@ -14,14 +15,17 @@ def read_dict(path) -> dict[str, str]:
     with open(path, "r", encoding='utf-8') as f:
         for line in f:
             line = line.strip()
-            token, ortho = line.split(maxsplit=1)
+            token, ortho = line.split("\t")
             if ortho == "None":
                 d[token] = ''
+            else:
+                d[token] = ortho
     return d
 
 AD_HOCS = read_dict(ad_hoc_path)
 EQUIV_SYMBOLS = read_dict(equiv_symbol_path)
 EQUIV_ENVS = read_dict(equiv_env_path)
+EQUIV_EXPRESSIONS = read_dict(equiv_expression_path)
 
 DATA_PATH = parent / "dataset/UniMER-1M_merged/train.txt"
 
@@ -30,6 +34,7 @@ def normalize(data_path: Path=DATA_PATH):
         lines = [i.strip() for i in f]
     
     lines = [normalize_env(line) for line in tqdm(lines, total=len(lines))]
+    lines = [normalize_expression(line) for line in tqdm(lines, total=len(lines))]
 
     new_lines = []
     for line in tqdm(lines, total=len(lines)):
@@ -60,6 +65,11 @@ def normalize_symbol(tokens, normalizer:dict[str, str]=EQUIV_SYMBOLS):
 def normalize_env(text:str, normalizer:dict[str, str]=EQUIV_ENVS):
     for token, ortho in normalizer.items():
         text = text.replace(f"{{ {token} ", f"{ortho} {{ ").replace(f"{token} {{" ,f"{ortho} {{")
+    return text
+
+def normalize_expression(text:str, normalizer:dict[str, str]=EQUIV_EXPRESSIONS):
+    for token, ortho in normalizer.items():
+        text = text.replace(token, ortho)
     return text
 
 def normalize_left_right(tokens: list[str]):

@@ -1,4 +1,9 @@
-from normalize import normalize_env, normalize_left_right, normalize_symbol
+from normalize import (
+    normalize_env,
+    normalize_expression,
+    normalize_left_right,
+    normalize_symbol,
+)
 
 
 def test_normalize_env():
@@ -19,4 +24,8 @@ def test_normalize_left_right():
     o = ' '.join(normalize_left_right(i.split()))
     assert o == t
 
-# test_normalize_env()
+def test_normalize_expression():
+    i = r"k ^ { \prime } m ^ { ' }"
+    t = r"k ' m '"
+    o = normalize_expression(i)
+    assert o == t
