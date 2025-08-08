@@ -1,0 +1,9 @@
+\rm \mathrm
+\bf \mathbf
+\sf \mathsf
+\bold \mathbf
+\it \mathit
+\tt \mathtt
+\Bbb \mathbb
+\frak \mathfrak
+\cal \mathcal
