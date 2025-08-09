@@ -1,3 +1,2 @@
-^ { ' }	'
-^ { \prime }	'
-^ { \prime \prime }	' '
+^ { ' }	^ { \prime }
+{ ' }	^ { \prime }
