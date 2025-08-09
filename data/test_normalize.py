@@ -2,6 +2,7 @@ from normalize import (
     normalize_env,
     normalize_expression,
     normalize_left_right,
+    normalize_scope,
     normalize_symbol,
 )
 
@@ -29,3 +30,26 @@ def test_normalize_expression():
     t = r"k ' m '"
     o = normalize_expression(i)
     assert o == t
+
+def test_normalize_scope():
+    i = r"^ { \phantom { {} {\dagger} {} } } \dag ^ { \phantom { \dagger } } \dag"
+    t = r"^ { } \dag ^ { } \dag"
+    i2 = r"C _ { 1 0 } = \frac { 1 } { 2 } \sqrt { \left( \phantom { } _ { 0 } T _ { 2 1 0 } ^ { c } \right) ^ { 2 } + \left( \phantom { } _ { 0 } T _ { 2 1 0 } ^ { s } \right) ^ { 2 } } ,"
+    t2 = r"C _ { 1 0 } = \frac { 1 } { 2 } \sqrt { \left( _ { 0 } T _ { 2 1 0 } ^ { c } \right) ^ { 2 } + \left( _ { 0 } T _ { 2 1 0 } ^ { s } \right) ^ { 2 } } ,"
+    i3 = r"\phantom { } _ { 1 } \Delta \bar { C } _ { 3 0 }"
+    t3 = r"_ { 1 } \Delta \bar { C } _ { 3 0 }"
+    i4 = r"\phantom { }"
+    t4 = r""
+    i5 = r"^ { \vphantom \dagger }"
+    t5 = r"^ { }"
+
+    o = ' '.join(normalize_scope(i.split()))
+    o2 = ' '.join(normalize_scope(i2.split()))
+    o3 = ' '.join(normalize_scope(i3.split()))
+    o4 = ' '.join(normalize_scope(i4.split()))
+    o5 = ' '.join(normalize_scope(i5.split()))
+    assert o == t
+    assert o2 == t2
+    assert o3 == t3
+    assert o4 == t4
+    assert o5 == t5

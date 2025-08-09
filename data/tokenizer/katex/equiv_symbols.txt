@@ -16,6 +16,8 @@
 \alef	\aleph
 \alefsym	\aleph
 \dArr	\Darr
+\dagger	\dag
+\ddagger	\ddag
 \doublecap	\Cap
 \doublecup	\Cup
 \downarrow	\darr
@@ -23,9 +25,11 @@
 \gets	\larr
 \gt	>
 \hArr	\Harr
+\infty	\infin
 \image	\Im
 \isin	\in
 \lArr	\Larr
+\ldots	\dots
 \lVert	\|
 \lbrace	\{
 \lbrack	[

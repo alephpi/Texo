@@ -1015,6 +1015,8 @@ Style:
   \nolimits
   \verb
 Symbol_and_Punctuation:
+  、
+  。
   {
   }
   .
@@ -1028,7 +1030,6 @@ Symbol_and_Punctuation:
   /
   &
   #
-  %
   \dots
   \%
   \#
@@ -1140,3 +1141,8 @@ Symbol_and_Punctuation:
   \textcircled
   \maltese
   \minuso
+Spacing_min:
+  ~
+  \!
+  \quad
+  \qquad

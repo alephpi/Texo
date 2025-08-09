@@ -1,3 +1,4 @@
+--	- -
 ---	- - -
 \Bar	\bar
 \Breve	\breve
@@ -21,6 +22,38 @@
 …	\dots
 \hdots	\cdots
 \time	\times
-\mathopen	None
-\mathclose	None
-\mathinner	None
+\allowdisplaybreaks	None
+–	-
+\-	None
+\medskip	None
+\normalfont	None
+\lefteqn	None
+\textsc	\textrm
+\displaylimits	None
+\sp	^
+\sb	_
+\unboldmath	None
+\upalpha	\alpha
+\upbeta	\beta
+\upgamma	\gamma
+\updelta	\delta
+\upepsilon	\epsilon
+\upzeta	\zeta
+\upeta	\eta
+\uptheta	\theta
+\upiota	\iota
+\upkappa	\kappa
+\uplambda	\lambda
+\upmu	\mu
+\upnu	\nu
+\upxi	\xi
+\upomicron	\omicron
+\uppi	\pi
+\uprho	\rho
+\upsigma	\sigma
+\uptau	\tau
+\upupsilon	\upsilon
+\upphi	\phi
+\upchi	\chi
+\uppsi	\psi
+\upomega	\omega
