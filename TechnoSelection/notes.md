@@ -81,10 +81,10 @@ I suppose that due to the lack of paired img-latex data, the SOTA models(PPFormu
 Of course, we will skip the pretraining stage as for the limited access to large document data. And we will mainly focus on how to modify the decoder and finetuning it.
 
 # Workflow
-1. Determine the necessary tokens - hard coding into the tokenizer.
-2. Use a latex math mode parser to parse and normalize the mark-up expression.
-3. Collect a massive mono-corpus of latex math mode codes.
-4. Train a tokenizer (with hard-coded tokens) on the normalized mono-corpus.
+1. [x] Determine the necessary tokens - hard coding into the tokenizer.
+2. [x] Use a latex math mode parser to parse and normalize the mark-up expression.
+3. [x] Collect a massive mono-corpus of latex math mode codes.
+4. [x] Train a tokenizer (with hard-coded tokens) on the normalized mono-corpus.
 5. Train a vision encoder-decoder model on normalized paired-corpus(image-latex). 
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
@@ -135,3 +135,13 @@ MixTex TexTeller UniMERNet-tiny,small,base
 ## Notes
 UniMERNet 的论文是比较详细的，并且它参考的前作 Donut 的论文亦如是。Donut 论文中提到 text reading 预训练（其实就是 OCR）对涨点帮助较大，但 Donut 相当于是文档理解模型，它的下游任务是比较多的，而它又自称是 OCR-free 模型，其实不妨说是把传统多步的文档理解流程中的 OCR 模块嵌入到预训练知识中。
 而对于 UniMERNet 而言，因为它本质上就是 Math OCR，因此预训练并没有它说的那么大提升（只是 BLEU score 上小数点后第三位的提升），何况后作 CDM 上已经指出 BLEU score 作为 Math OCR 任务的度量标准是有失公允的。因此我个人认为就这个任务而言，预训练的帮助有限。
+
+UniMER-1M 数据集的问题：
+1. 下载数据集后，发现 train.txt 有 1061790 行，并非 dataset card 上说的 1061791 条数据。同时，train/images 下只有 986122 张图片。即便除去需要单独下载的 HME-100K-train 中的 74502 条数据，仍然不符合，有 1061790-74502-986122=987288-986122=1166 条缺口，经过查找在 [此处](https://github.com/opendatalab/UniMERNet/issues/2) 发现了数据集的渲染问题，删除了这 1166 条数据。
+2. 参考 [这里](https://github.com/opendatalab/UniMERNet/issues/14) 合并 UniMER-1M 与 HME-100K 数据集。
+3. 合并数据集后，按照官网仓库的 dataloader 配对（用 image 的编号去配对标注的行号）
+4. 预处理的脚本 https://github.com/harvardnlp/im2markup/tree/master/scripts/preprocessing.
+
+粗看了一下 UniMER-1M 的数据集，合成数据集的可行度相当高。特别是 SPE 和 CPE 其实也都是从现有数据集特别是 img2LaTeX-100K 中采样得到。
+
+可以考虑参考一下 https://github.com/LinXueyuanStdio/LaTeX_OCR/ 虽然他的仓库比较古老，但其中的学习笔记值得一看。
