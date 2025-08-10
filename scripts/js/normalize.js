@@ -88,6 +88,7 @@ async function processFile(inputPath, outputPath, errorPath) {
         input: fs.createReadStream(inputPath),
         crlfDelay: Infinity
     });
+    console.log("normalize "+ inputPath)
     const writeStream = fs.createWriteStream(outputPath);
     const errorStream = fs.createWriteStream(errorPath);
 
@@ -114,16 +115,16 @@ async function processFile(inputPath, outputPath, errorPath) {
             writeStream.write(result + '\n');
         }
         
-        console.log(`处理完成，共处理 ${lineNumber} 行`);
-        console.log(`结果已保存至 ${outputPath}`);
-        console.log(`错误信息已保存至 ${errorPath}`);
-        console.log(`共 ${errorNumber} 发生错误`);
+        // console.log(`处理完成，共处理 ${lineNumber} 行`);
+        console.log(`saved to ${outputPath}`);
+        console.log(`errors dumped to ${errorPath}`);
     } catch (err) {
         console.error('文件读取过程中发生错误:', err);
     } finally {
         // 确保写入流关闭
         writeStream.end();
     }
+
 }// 使用示例
 const inputFile = './data/dataset/UniMER-1M_merged/train_normalized.txt';   // 输入文件路径
 const outputFile = './data/dataset/UniMER-1M_merged/train_normalized_.txt'; // 输出文件路径

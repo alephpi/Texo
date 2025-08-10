@@ -57,3 +57,5 @@
 \upchi	\chi
 \uppsi	\psi
 \upomega	\omega
+\upvarepsilon	\varepsilon
+\raisebox \{ \depth \}	None

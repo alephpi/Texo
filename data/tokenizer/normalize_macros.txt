@@ -20,6 +20,8 @@
 \aftergroup	None
 \begingroup	None
 \endgroup	None
+\mathchoice	None
+\everymath	None
 \,	~
 \thinspace	~
 \>	~
@@ -34,3 +36,7 @@
 \negmedspace	\!
 \negthickspace	\!
 \nonumber	None
+\eqno	\qquad
+\allowbreak	None
+\nobreak	None
+\newline	\\

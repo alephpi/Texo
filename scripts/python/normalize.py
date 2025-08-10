@@ -1,18 +1,17 @@
-import re
 from pathlib import Path
 
 from tqdm import tqdm
 
-parent = Path(__file__).resolve().parent
+TOKENIZER_PATH = Path("./data/tokenizer")
 
-equiv_env_path = parent / "tokenizer/katex/equiv_envs.txt"
-equiv_symbol_path = parent / "tokenizer/katex/equiv_symbols.txt"
-ad_hoc_path = parent / "tokenizer/katex/ad_hoc.txt"
-equiv_expression_path = parent / "tokenizer/katex/equiv_expressions.txt"
-equiv_format_path = parent / "tokenizer/katex/equiv_formats.txt"
+normalize_env_path = TOKENIZER_PATH / "normalize_envs.txt"
+normalize_symbol_path = TOKENIZER_PATH / "normalize_symbols.txt"
+normalize_ad_hoc_path = TOKENIZER_PATH / "normalize_ad_hocs.txt"
+normalize_expression_path = TOKENIZER_PATH / "normalize_expressions.txt"
+normalize_macros_path = TOKENIZER_PATH / "normalize_macros.txt"
 
 def read_dict(path) -> dict[str, str]:
-    print(path)
+    print(f"load {path}")
     d = {}
     with open(path, "r", encoding='utf-8') as f:
         for line in f:
@@ -24,21 +23,22 @@ def read_dict(path) -> dict[str, str]:
                 d[token] = ortho
     return d
 
-AD_HOCS = read_dict(ad_hoc_path)
-EQUIV_SYMBOLS = read_dict(equiv_symbol_path)
-EQUIV_ENVS = read_dict(equiv_env_path)
-EQUIV_EXPRESSIONS = read_dict(equiv_expression_path)
-EQUIV_FORMATS = read_dict(equiv_format_path)
+AD_HOCS_normalizer = read_dict(normalize_ad_hoc_path)
+SYMBOLS_normalizer = read_dict(normalize_symbol_path)
+ENVS_normalizer = read_dict(normalize_env_path)
+EXPRESSIONS_normalizer = read_dict(normalize_expression_path)
+MACROS_normalizer = read_dict(normalize_macros_path)
 
-DATA_PATH = parent / "dataset/UniMER-1M_merged/train.txt"
+DATA_PATH = Path("./data/dataset/UniMER-1M_merged/train.txt")
 
 def normalize(data_path: Path=DATA_PATH):
+    print(f"normalize {data_path}")
     with open(data_path, "r", encoding="utf-8") as f:
         lines = [i.strip() for i in f]
     
     new_lines = []
     for line in tqdm(lines, total=len(lines)):
-        line = normalize_format(line)
+        line = normalize_macros(line)
         line = normalize_spacing(line)
         line = normalize_env(line)
         line = normalize_expression(line)
@@ -66,24 +66,26 @@ def normalize(data_path: Path=DATA_PATH):
         tokens = [token for token in tokens if token != ""]
         new_lines.append(' '.join(tokens))
     
-    with open(data_path.with_name("train_normalized.txt"), 'w', encoding='utf-8') as f:
+    out_file = data_path.with_name("train_normalized.txt")
+    with open(out_file, 'w', encoding='utf-8') as f:
         for line in new_lines:
             f.write(f"{line}\n")
+    print(f"saved to {out_file}")
 
-def normalize_symbol(tokens, normalizer:dict[str, str]=EQUIV_SYMBOLS):
+def normalize_symbol(tokens, normalizer:dict[str, str]=SYMBOLS_normalizer):
     return [normalizer.get(token, token) for token in tokens]
 
-def normalize_env(text:str, normalizer:dict[str, str]=EQUIV_ENVS):
+def normalize_env(text:str, normalizer:dict[str, str]=ENVS_normalizer):
     for token, ortho in normalizer.items():
         text = text.replace(f"{{ {token} ", f"{ortho} {{ ").replace(f"{token} {{" ,f"{ortho} {{")
     return text
 
-def normalize_expression(text:str, normalizer:dict[str, str]=EQUIV_EXPRESSIONS):
+def normalize_expression(text:str, normalizer:dict[str, str]=EXPRESSIONS_normalizer):
     for token, ortho in normalizer.items():
         text = text.replace(token, ortho)
     return text
 
-def normalize_format(text:str, normalizer:dict[str, str]=EQUIV_FORMATS):
+def normalize_macros(text:str, normalizer:dict[str, str]=MACROS_normalizer):
     for token, ortho in normalizer.items():
         text = text.replace(token, ortho)
     return text
@@ -109,7 +111,7 @@ def normalize_left_right(tokens: list[str]):
 
     return new_tokens
 
-def normalize_ad_hoc(tokens: list[str], normalizer:dict[str, str]=AD_HOCS):
+def normalize_ad_hoc(tokens: list[str], normalizer:dict[str, str]=AD_HOCS_normalizer):
     return [normalizer.get(token, token) for token in tokens]
 
 # def normalize_scope(tokens: list[str]):

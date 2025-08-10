@@ -1,4 +1,4 @@
-from normalize import (
+from scripts.python.normalize import (
     normalize_env,
     normalize_expression,
     normalize_left_right,
