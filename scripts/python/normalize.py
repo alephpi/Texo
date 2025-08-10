@@ -36,7 +36,7 @@ def normalize(data_path: Path=DATA_PATH):
     with open(data_path, "r", encoding="utf-8") as f:
         lines = [i.strip() for i in f]
     
-    new_lines = []
+    new_lines: list[str] = []
     for line in tqdm(lines, total=len(lines)):
         line = normalize_macros(line)
         line = normalize_spacing(line)
@@ -47,9 +47,11 @@ def normalize(data_path: Path=DATA_PATH):
 
     new_lines = []
     for line in tqdm(lines, total=len(lines)):
-        pretokens = line.split()
         tokens = []
-        for pretoken in pretokens:
+        # need to separate \left\command and \right\command
+        # as there can be a lot of combinations, and it may be benefitial to 
+        # make the model learn to pairing \left and \right individually
+        for pretoken in line.split():
             if "\\\\" == pretoken:
                 tokens.append(pretoken)
             elif "\\" in pretoken:
@@ -96,7 +98,7 @@ def normalize_spacing(text:str):
 
 def normalize_left_right(tokens: list[str]):
     new_tokens: list[str] = []
-    delimiters =  ["(", ")", "[", "]", "|", "<", ">", "/"]
+    delimiters =  ["(", ")", "[", "]", "|", "<", ">", "/", "."]
     for token in tokens:
         if token.startswith("\\left") and token[-1] in delimiters:
             left = "\\left"

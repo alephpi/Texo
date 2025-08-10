@@ -54,7 +54,6 @@ X
 Y
 Z
 [
-\
 \!
 \#
 \%
@@ -331,7 +330,6 @@ Z
 \ldotp
 \le
 \left
-\left.
 \leftarrowtail
 \leftharpoondown
 \leftharpoonup
@@ -486,7 +484,6 @@ Z
 \rgroup
 \rho
 \right
-\right.
 \rightarrowtail
 \rightharpoondown
 \rightharpoonup

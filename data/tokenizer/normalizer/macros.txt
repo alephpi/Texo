@@ -1,4 +1,3 @@
- \ 	 ~ 
 \mathbin	None
 \mathopen	None
 \mathclose	None
