@@ -42,9 +42,9 @@ async function processFile(inputPath, errorPath) {
             // 写入处理结果（或原始行）
         }
         
-        console.log(`处理完成，共处理 ${lineNumber} 行`);
-        console.log(`错误信息已保存至 ${errorPath}`);
-        console.log(`共 ${errorNumber} 发生错误`);
+        // console.log(`处理完成，共处理 ${lineNumber} 行`);
+        console.log(`errors dumped in ${errorPath}`);
+        console.log(`parser error lines ${errorNumber}`);
     } catch (err) {
         console.error('文件读取过程中发生错误:', err);
     } finally {

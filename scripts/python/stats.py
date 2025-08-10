@@ -1,6 +1,8 @@
 from collections import OrderedDict, defaultdict
 from pathlib import Path
 
+from scripts.python.normalize import NORMALIZER_PATH
+
 DATA_PATH = Path("./data/dataset/UniMER-1M_merged/train_normalized_.txt")
 TOKEN_IN_DESIGN_PATH = Path("./data/tokenizer/support.txt")
 TOKEM_IN_USE_PATH = Path("./data/dataset/UniMER-1M_merged/stats.txt")
@@ -56,8 +58,14 @@ def main():
     token_in_design = load_token_in_design()
     token_in_use = set(vocab.keys())
     token_in_common = token_in_use.intersection(token_in_design)
-    residues = token_in_use.difference(token_in_common)
+    output_file = NORMALIZER_PATH.with_name("common_tokens.txt")
+    with open(output_file, "w", encoding="utf-8") as f:
+        for token in token_in_common:
+            f.write(f"{token}\n")
+    print(f"saved to {output_file}")
 
+
+    residues = token_in_use.difference(token_in_common)
     output_file = DATA_PATH.with_name("residue_tokens.txt")
     with open(output_file, "w", encoding="utf-8") as f:
         for token, count in vocab.items():
@@ -65,6 +73,16 @@ def main():
                 f.write(f"{token} {count}\n")
     print(f"saved to {output_file}")
 
+    ignore_indices = []
+    for i, line in enumerate(lines):
+        for token in line.split():
+            if token in residues:
+                ignore_indices.append(i+1)
+                break
+    output_file = DATA_PATH.with_name("ignore_indices.txt")
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(map(str, ignore_indices)))
+    print(f"saved to {output_file}")
 
 if __name__ == "__main__":
     main()
