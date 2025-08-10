@@ -1,0 +1,10 @@
+{
+  "name": "js-scripts",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "dependencies": {
+    "katex": "^0.16.22",
+    "typescript": "^5.9.2"
+  }
+}
