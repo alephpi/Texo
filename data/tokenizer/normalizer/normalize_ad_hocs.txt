@@ -58,4 +58,23 @@
 \uppsi	\psi
 \upomega	\omega
 \upvarepsilon	\varepsilon
-\raisebox \{ \depth \}	None
+\raisebox	None
+\expandafter	None
+\romannumeral	None
+\uppercase	None
+\MakeUppercase	None
+\index	None
+\smallskip	None
+\enskip	None
+\hskip	None
+\bigskip	None
+\baselineskip	None
+\thinmuskip	None
+\normalbaselineskip	None
+\offinterlineskip	None
+\mathchoice	None
+\everymath	None
+\fontfamily	None
+\selectfont	None
+\raisetag	None
+\depth	None

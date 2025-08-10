@@ -20,8 +20,6 @@
 \aftergroup	None
 \begingroup	None
 \endgroup	None
-\mathchoice	None
-\everymath	None
 \,	~
 \thinspace	~
 \>	~

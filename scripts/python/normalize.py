@@ -2,13 +2,13 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-TOKENIZER_PATH = Path("./data/tokenizer")
+NORMALIZER_PATH = Path("./data/tokenizer/normalizer")
 
-normalize_env_path = TOKENIZER_PATH / "normalize_envs.txt"
-normalize_symbol_path = TOKENIZER_PATH / "normalize_symbols.txt"
-normalize_ad_hoc_path = TOKENIZER_PATH / "normalize_ad_hocs.txt"
-normalize_expression_path = TOKENIZER_PATH / "normalize_expressions.txt"
-normalize_macros_path = TOKENIZER_PATH / "normalize_macros.txt"
+normalize_env_path = NORMALIZER_PATH / "envs.txt"
+normalize_symbol_path = NORMALIZER_PATH / "symbols.txt"
+normalize_ad_hoc_path = NORMALIZER_PATH / "ad_hocs.txt"
+normalize_expression_path = NORMALIZER_PATH / "expressions.txt"
+normalize_macros_path = NORMALIZER_PATH / "macros.txt"
 
 def read_dict(path) -> dict[str, str]:
     print(f"load {path}")
