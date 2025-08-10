@@ -1,11 +1,8 @@
 from collections import OrderedDict, defaultdict
 from pathlib import Path
 
-from scripts.python.normalize import NORMALIZER_PATH
-
-DATA_PATH = Path("./data/dataset/UniMER-1M_merged/train_normalized_.txt")
-TOKEN_IN_DESIGN_PATH = Path("./data/tokenizer/support.txt")
-TOKEM_IN_USE_PATH = Path("./data/dataset/UniMER-1M_merged/stats.txt")
+DATASET_PATH = Path("./data/dataset/UniMER-1M_merged")
+TOKENIZER_PATH = Path("./data/tokenizer")
 
 def compute_stats(lines: list[str]):
     vocab: defaultdict = defaultdict(int)
@@ -26,7 +23,7 @@ def compute_stats(lines: list[str]):
             vocab[token] += 1
     return vocab
 
-def load_token_in_design(path=TOKEN_IN_DESIGN_PATH, ignore_group=["Color", "Class_Assignment", "Spacing", "Style"]):
+def load_token_in_design(path=TOKENIZER_PATH / "support.txt", ignore_group=["Color", "Class_Assignment", "Spacing", "Style"]):
     token_in_design = set()
     ignore = False
     with open(path, "r", encoding="utf-8") as f:
@@ -43,13 +40,14 @@ def load_token_in_design(path=TOKEN_IN_DESIGN_PATH, ignore_group=["Color", "Clas
 
 
 def main():
-    print(f"compute stats in {DATA_PATH}")
-    with open(DATA_PATH, "r", encoding="utf-8") as f:
+    input_file = DATASET_PATH / 'train_normalized_.txt'
+    print(f"compute stats in {input_file}")
+    with open(input_file, "r", encoding="utf-8") as f:
         lines = [i.strip() for i in f]
     
     vocab = compute_stats(lines)
     vocab = OrderedDict(sorted(vocab.items(), key=lambda x: x[1], reverse=True))
-    output_file = DATA_PATH.with_name("stats.txt")
+    output_file = DATASET_PATH / "stats.txt"
     with open(output_file, "w", encoding="utf-8") as f:
         for key, count in vocab.items():
             f.write(f"{key} {count}\n")
@@ -58,15 +56,15 @@ def main():
     token_in_design = load_token_in_design()
     token_in_use = set(vocab.keys())
     token_in_common = token_in_use.intersection(token_in_design)
-    output_file = NORMALIZER_PATH.with_name("common_tokens.txt")
+    output_file = TOKENIZER_PATH / "common_tokens.txt"
     with open(output_file, "w", encoding="utf-8") as f:
-        for token in token_in_common:
+        for token in sorted(token_in_common):
             f.write(f"{token}\n")
     print(f"saved to {output_file}")
 
 
     residues = token_in_use.difference(token_in_common)
-    output_file = DATA_PATH.with_name("residue_tokens.txt")
+    output_file = DATASET_PATH / "residue_tokens.txt"
     with open(output_file, "w", encoding="utf-8") as f:
         for token, count in vocab.items():
             if token in residues:
@@ -79,7 +77,7 @@ def main():
             if token in residues:
                 ignore_indices.append(i+1)
                 break
-    output_file = DATA_PATH.with_name("ignore_indices.txt")
+    output_file = DATASET_PATH / "ignore_indices.txt"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(map(str, ignore_indices)))
     print(f"saved to {output_file}")
