@@ -69,7 +69,7 @@ After reading all the paper or readme file, in my intuition, the MER ability of 
 GOT > PPFormulaNet-L ~ UniMERNet-B > UniMERNet-S ~ PPFormulaNet-S ~ TexTeller3 > UniMERNet-T > MixTeX
 Especially, when CMD paper demonstrates the mismatch between the BLEU score and the MER performance, it convinces me that the actual difference between large model and its small variety would be even marginal.
 
-First of all, apparently by looking at the table, we may immediately find out that, except for GOT where general OCR ability is emphasized, the other models hold a far bigger vocabulary than necessary for MER - even 15K is way much than need, e.g. for im2LaTeX(Deng) model, the vocab size is only ~500, this means we can greatly reduce the model size by removing a huge amount of unnecessary tokens from vocabulary. (In fact the reason why these models use such a large vocabulary is because that they often inherit it from a large pretrained model).
+First of all, apparently by looking at the table, we may immediately find out that, except for GOT where general OCR ability is emphasized, the other models hold a far bigger vocabulary than necessary for MER - even 15K is way much than need, e.g. for im2LaTeX(Deng) model, the vocab size is only ~500, this means we can greatly reduce the model size by removing a huge amount of unnecessary tokens from the vocabulary. (In fact the reason why these models use such a large vocabulary is because that they often inherit it from a large pretrained model).
 
 The second possibility to reduce the model size is by reducing the hidden dimension of the model, e.g. from UniMERNet B to T, the model size is greatly reduced, without hurting too much the performance.
 
@@ -80,12 +80,17 @@ I suppose that due to the lack of paired img-latex data, the SOTA models(PPFormu
 
 Of course, we will skip the pretraining stage as for the limited access to large document data. And we will mainly focus on how to modify the decoder and finetuning it.
 
+In conclusion, we choose the PP-FormulaNet as our architecture, which has the best efficiency-performance trade-off.
+
 # Workflow
-1. [x] Determine the necessary tokens - hard coding into the tokenizer.
-2. [x] Use a latex math mode parser to parse and normalize the mark-up expression.
-3. [x] Collect a massive mono-corpus of latex math mode codes.
-4. [x] Train a tokenizer (with hard-coded tokens) on the normalized mono-corpus.
-5. Train a vision encoder-decoder model on normalized paired-corpus(image-latex). 
+- [x] 1. Determine the necessary tokens - hard coding into the tokenizer.
+- [x] 2. Use a latex math mode parser to parse and normalize the mark-up expression.
+- [x] 3. Collect a massive mono-corpus of latex math mode codes.
+- [x] 4. Train a tokenizer (with hard-coded tokens) on the normalized mono-corpus.
+- [ ] 5. Train a vision encoder-decoder model on normalized paired-corpus(image-latex). 
+  - [ ] Encoder: convert PP-HGNetV2 to pytorch
+  - [ ] Decoder: migrate the UniMERNet decoder(customized MBart), refer to https://github.com/ParaN3xus/my-unimernet
+
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
 2. Render it with an efficient engine(katex, mathjax, mathpix, latex).
@@ -145,3 +150,28 @@ UniMER-1M 数据集的问题：
 粗看了一下 UniMER-1M 的数据集，合成数据集的可行度相当高。特别是 SPE 和 CPE 其实也都是从现有数据集特别是 img2LaTeX-100K 中采样得到。
 
 可以考虑参考一下 https://github.com/LinXueyuanStdio/LaTeX_OCR/ 虽然他的仓库比较古老，但其中的学习笔记值得一看。
+
+注意到 PPFormulaNet-S 的 decoder 参数量为 44M，其中 embedding layer 和 lm head 各占 384*50000 = 19.2M，因此单单把词汇量从 50k 缩小到 1k 就能节省 37.6M 的参数，此时 decoder 剩余的参数量为 6M。
+
+PPFormulaNet-S 的架构及模型参数量（单位 M）：
+```
+(Encoder)pphgnet_b4 19.89
+  (stem) 0.03
+  (stages) 13.57
+  (last_conv) 4.19 (2048*2048)
+  (fc) 2.10 (2048*1024)
+
+(enc_to_dec_proj) 0.79 (2048*384)
+
+(Decoder) MBart 43.53
+  (embed_tokens) 19.20 (50000*384)
+  (embed_positions) 0.40
+  (layers) 4.73
+    (layer 0) 2.37
+      (self_attn) 0.59(384 * 384 * 4)
+      (encoder_attn) 0.59(384 * 384 * 4)
+      (fc1) 384*1536 0.59
+      (fc2) 384*1536 0.59
+    (layer 1) 2.37
+  (lm_head) 19.20 (50000*384)
+```
