@@ -7,24 +7,6 @@ import torch
 import torch.nn as nn
 
 
-class ConvNormLayer(nn.Module):
-    def __init__(self, ch_in, ch_out, kernel_size, stride, padding=None, bias=False, act=None):
-        super().__init__()
-        self.conv = nn.Conv2d(
-            ch_in,
-            ch_out,
-            kernel_size,
-            stride,
-            padding=(kernel_size - 1) // 2 if padding is None else padding,
-            bias=bias,
-        )
-        self.norm = nn.BatchNorm2d(ch_out)
-        self.act = nn.Identity() if act is None else get_activation(act)
-
-    def forward(self, x):
-        return self.act(self.norm(self.conv(x)))
-
-
 class FrozenBatchNorm2d(nn.Module):
     """copy and modified from https://github.com/facebookresearch/detr/blob/master/models/backbone.py
     BatchNorm2d where the batch statistics and the affine parameters are fixed.
@@ -79,39 +61,111 @@ def freeze_batch_norm2d(module: nn.Module) -> nn.Module:
                 setattr(module, name, _child)
     return module
 
+class LearnableAffineBlock(nn.Module):
+    def __init__(self, scale_value=1.0, bias_value=0.0):
+        super().__init__()
+        self.scale = nn.Parameter(torch.tensor([scale_value]), requires_grad=True)
+        self.bias = nn.Parameter(torch.tensor([bias_value]), requires_grad=True)
 
-def get_activation(act: str, inplace: bool = True):
-    """get activation"""
-    if act is None:
-        return nn.Identity()
+    def forward(self, x):
+        return self.scale * x + self.bias
 
-    elif isinstance(act, nn.Module):
-        return act
 
-    act = act.lower()
+class ConvBNAct(nn.Module):
+    def __init__(
+        self,
+        in_chs,
+        out_chs,
+        kernel_size,
+        stride=1,
+        groups=1,
+        padding="",
+        use_act=True,
+        use_lab=False,
+    ):
+        super().__init__()
+        self.use_act = use_act
+        self.use_lab = use_lab
+        if padding == "same":
+            self.conv = nn.Sequential(
+                nn.ZeroPad2d([0, 1, 0, 1]),
+                nn.Conv2d(in_chs, out_chs, kernel_size, stride, groups=groups, bias=False),
+            )
+        else:
+            self.conv = nn.Conv2d(
+                in_chs,
+                out_chs,
+                kernel_size,
+                stride,
+                padding=(kernel_size - 1) // 2,
+                groups=groups,
+                bias=False,
+            )
+        self.bn = nn.BatchNorm2d(out_chs)
+        if self.use_act:
+            self.act = nn.ReLU()
+        else:
+            self.act = nn.Identity()
+        if self.use_act and self.use_lab:
+            self.lab = LearnableAffineBlock()
+        else:
+            self.lab = nn.Identity()
 
-    if act == "silu" or act == "swish":
-        m = nn.SiLU()
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.act(x)
+        x = self.lab(x)
+        return x
 
-    elif act == "relu":
-        m = nn.ReLU()
 
-    elif act == "leaky_relu":
-        m = nn.LeakyReLU()
+class LightConvBNAct(nn.Module):
+    def __init__(
+        self,
+        in_chs,
+        out_chs,
+        kernel_size,
+        groups=1,
+        use_lab=False,
+    ):
+        super().__init__()
+        self.conv1 = ConvBNAct(
+            in_chs,
+            out_chs,
+            kernel_size=1,
+            use_act=False,
+            use_lab=use_lab,
+        )
+        self.conv2 = ConvBNAct(
+            out_chs,
+            out_chs,
+            kernel_size=kernel_size,
+            groups=out_chs,
+            use_act=True,
+            use_lab=use_lab,
+        )
 
-    elif act == "silu":
-        m = nn.SiLU()
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        return x
 
-    elif act == "gelu":
-        m = nn.GELU()
 
-    elif act == "hardsigmoid":
-        m = nn.Hardsigmoid()
+class EseModule(nn.Module):
+    def __init__(self, chs):
+        super().__init__()
+        self.conv = nn.Conv2d(
+            chs,
+            chs,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+        )
+        self.sigmoid = nn.Sigmoid()
 
-    else:
-        raise RuntimeError("")
-
-    if hasattr(m, "inplace"):
-        m.inplace = inplace
-
-    return m
+    def forward(self, x):
+        identity = x
+        x = x.mean((2, 3), keepdim=True)
+        x = self.conv(x)
+        x = self.sigmoid(x)
+        return torch.mul(identity, x)
