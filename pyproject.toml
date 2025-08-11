@@ -3,10 +3,23 @@ name = "syntex"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = []
+requires-python = ">=3.11"
+dependencies = [
+    "albumentations>=2.0.2",
+    "ftfy>=6.3.1",
+    "omegaconf>=2.3.0",
+    "opencv-python>=4.10.0.84",
+    "pillow>=11.1.0",
+    "torch==2.7.0",
+    "torchvision>=0.20.1",
+    "transformers==4.53.0",
+    "wand>=0.6.13",
+]
 
 [dependency-groups]
 dev = [
     "jupyterlab>=4.4.5",
 ]
+
+[tool.uv.pip]
+index-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
