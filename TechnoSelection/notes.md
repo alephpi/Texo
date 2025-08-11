@@ -153,6 +153,8 @@ UniMER-1M 数据集的问题：
 
 注意到 PPFormulaNet-S 的 decoder 参数量为 44M，其中 embedding layer 和 lm head 各占 384*50000 = 19.2M，因此单单把词汇量从 50k 缩小到 1k 就能节省 37.6M 的参数，此时 decoder 剩余的参数量为 6M。
 
+PaddleOCR 中的 PPHGNetv2 实现非常费解，我们找到了 D-FINE 的实现，虽然二者任务不同但骨干网络相同。
+
 PPFormulaNet-S 的架构及模型参数量（单位 M）：
 ```
 (Encoder)pphgnet_b4 19.89
