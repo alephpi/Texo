@@ -11,7 +11,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .layers import ConvBNAct, EseModule, FrozenBatchNorm2d, LightConvBNAct
+from .layers import (
+    ConvBNAct,
+    FrozenBatchNorm2d,
+    LightConvBNAct,
+    PaddingSameAsPaddleMaxPool2d,
+)
 from .utils import register
 
 __all__ = ["HGNetv2"]
@@ -44,6 +49,7 @@ class StemBlock(nn.Module):
             mid_channels // 2,
             kernel_size=2,
             stride=1,
+            padding="same",
             use_lab=use_lab,
         )
         self.stem2b = ConvBNAct(
@@ -51,13 +57,14 @@ class StemBlock(nn.Module):
             mid_channels,
             kernel_size=2,
             stride=1,
+            padding="same",
             use_lab=use_lab,
         )
         self.stem3 = ConvBNAct(
             mid_channels * 2,
             mid_channels,
             kernel_size=3,
-            stride=2,
+            stride=2,  # NOTE in paddleOCR, this stride can be 1 if it is text recognition task
             use_lab=use_lab,
         )
         self.stem4 = ConvBNAct(
@@ -67,13 +74,18 @@ class StemBlock(nn.Module):
             stride=1,
             use_lab=use_lab,
         )
+        # TODO check whether this implementation is equivalent to paddleOCR
         self.pool = nn.MaxPool2d(kernel_size=2, stride=1, ceil_mode=True)
+        # Paddle Detection
+        # self.pool = nn.MaxPool2d(kernel_size=2, stride=1, ceil_mode=True, padding="SAME")
+        # PaddleOCR2Pytorch
+        # self.pool = PaddingSameAsPaddleMaxPool2d(kernel_size=2, stride=1)
 
     def forward(self, x):
         x = self.stem1(x)
-        x = F.pad(x, (0, 1, 0, 1))
+        # x = F.pad(x, (0, 1, 0, 1))
         x2 = self.stem2a(x)
-        x2 = F.pad(x2, (0, 1, 0, 1))
+        # x2 = F.pad(x2, (0, 1, 0, 1))
         x2 = self.stem2b(x2)
         x1 = self.pool(x)
         x = torch.cat([x1, x2], dim=1)
@@ -87,13 +99,12 @@ class HG_Block(nn.Module):
         in_channels,
         mid_channels,
         out_channels,
-        layer_num,
+        layer_num, # NOTE in paddleOCR, this is 6 by default
         kernel_size=3,
-        residual=False,
-        light_block=False,
+        residual=False, # NOTE same as the argument "identity" in paddleOCR but we keep the name here since it is indeed a residual connectioin
+        light_block=True,
         use_lab=False,
-        agg="ese",
-        drop_path=0.0,
+        # drop_path=0.0,
     ):
         super().__init__()
         self.residual = residual
@@ -121,41 +132,27 @@ class HG_Block(nn.Module):
                 )
 
         # feature aggregation
-        total_chs = in_channels + layer_num * mid_channels
-        if agg == "se":
-            aggregation_squeeze_conv = ConvBNAct(
-                total_chs,
-                out_channels // 2,
-                kernel_size=1,
-                stride=1,
-                use_lab=use_lab,
-            )
-            aggregation_excitation_conv = ConvBNAct(
-                out_channels // 2,
-                out_channels,
-                kernel_size=1,
-                stride=1,
-                use_lab=use_lab,
-            )
-            self.aggregation = nn.Sequential(
-                aggregation_squeeze_conv,
-                aggregation_excitation_conv,
-            )
-        else:
-            aggregation_conv = ConvBNAct(
-                total_chs,
-                out_channels,
-                kernel_size=1,
-                stride=1,
-                use_lab=use_lab,
-            )
-            att = EseModule(out_channels)
-            self.aggregation = nn.Sequential(
-                aggregation_conv,
-                att,
-            )
+        total_channels = in_channels + layer_num * mid_channels
+        aggregation_squeeze_conv = ConvBNAct(
+            total_channels,
+            out_channels // 2,
+            kernel_size=1,
+            stride=1,
+            use_lab=use_lab,
+        )
+        aggregation_excitation_conv = ConvBNAct(
+            out_channels // 2,
+            out_channels,
+            kernel_size=1,
+            stride=1,
+            use_lab=use_lab,
+        )
+        self.aggregation = nn.Sequential(
+            aggregation_squeeze_conv,
+            aggregation_excitation_conv,
+        )
 
-        self.drop_path = nn.Dropout(drop_path) if drop_path else nn.Identity()
+        # self.drop_path = nn.Dropout(drop_path) if drop_path else nn.Identity()
 
     def forward(self, x):
         identity = x
@@ -166,7 +163,8 @@ class HG_Block(nn.Module):
         x = torch.cat(output, dim=1)
         x = self.aggregation(x)
         if self.residual:
-            x = self.drop_path(x) + identity
+            # x = self.drop_path(x) + identity
+            x += identity
         return x
 
 
@@ -179,11 +177,10 @@ class HG_Stage(nn.Module):
         block_num,
         layer_num,
         downsample=True,
-        light_block=False,
+        light_block=True,
         kernel_size=3,
         use_lab=False,
-        agg="se",
-        drop_path=0.0,
+        # drop_path=0.0,
     ):
         super().__init__()
         self.downsample = downsample
@@ -212,8 +209,7 @@ class HG_Stage(nn.Module):
                     kernel_size=kernel_size,
                     light_block=light_block,
                     use_lab=use_lab,
-                    agg=agg,
-                    drop_path=drop_path[i] if isinstance(drop_path, (list, tuple)) else drop_path,
+                    # drop_path=drop_path[i] if isinstance(drop_path, (list, tuple)) else drop_path,
                 )
             )
         self.blocks = nn.Sequential(*blocks_list)

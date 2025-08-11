@@ -3,9 +3,28 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
+import math
+
 import torch
 import torch.nn as nn
 
+
+# from https://github.com/frotms/PaddleOCR2Pytorch/blob/702c805136d7224884d9c9e032949e35533233b4/pytorchocr/modeling/backbones/rec_pphgnetv2.py#L1065
+class PaddingSameAsPaddleMaxPool2d(torch.nn.Module):
+    def __init__(self, kernel_size, stride=1):
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.pool = torch.nn.MaxPool2d(kernel_size, stride, padding=0, ceil_mode=True)
+
+    def forward(self, x):
+        _, _, h, w = x.shape
+        pad_h_total = max(0, (math.ceil(h / self.stride) - 1) * self.stride + self.kernel_size - h)
+        pad_w_total = max(0, (math.ceil(w / self.stride) - 1) * self.stride + self.kernel_size - w)
+        pad_h = pad_h_total // 2
+        pad_w = pad_w_total // 2
+        x = torch.nn.functional.pad(x, [pad_w, pad_w_total - pad_w, pad_h, pad_h_total - pad_h])
+        return self.pool(x)
 
 class FrozenBatchNorm2d(nn.Module):
     """copy and modified from https://github.com/facebookresearch/detr/blob/master/models/backbone.py
@@ -71,14 +90,16 @@ class LearnableAffineBlock(nn.Module):
         return self.scale * x + self.bias
 
 class ConvBNAct(nn.Module):
+    """A combination of Conv, BN and activation layer.
+    """
     def __init__(
         self,
         in_channels,
         out_channels,
-        kernel_size,
+        kernel_size=3,
         stride=1,
         groups=1,
-        padding="",
+        padding=1,
         use_act=True,
         use_lab=False,
     ):
@@ -87,21 +108,33 @@ class ConvBNAct(nn.Module):
         self.use_act = use_act
         self.use_lab = use_lab
 
-        if padding == "same":
-            self.conv = nn.Sequential(
-                nn.ZeroPad2d([0, 1, 0, 1]),
-                nn.Conv2d(in_channels, out_channels, kernel_size, stride, groups=groups, bias=False),
-            )
-        else:
-            self.conv = nn.Conv2d(
-                in_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=(kernel_size - 1) // 2,
-                groups=groups,
-                bias=False,
-            )
+        # NOTE the original padding is different from https://github.com/frotms/PaddleOCR2Pytorch/blob/main/pytorchocr/modeling/backbones/rec_pphgnetv2.py#L325
+        # if padding == "same":
+        #     self.conv = nn.Sequential(
+        #         nn.ZeroPad2d([0, 1, 0, 1]),
+        #         nn.Conv2d(in_channels, out_channels, kernel_size, stride, groups=groups, bias=False),
+        #     )
+        # else:
+        #     self.conv = nn.Conv2d(
+        #         in_channels,
+        #         out_channels,
+        #         kernel_size,
+        #         stride,
+        #         padding=(kernel_size - 1) // 2,
+        #         groups=groups,
+        #         bias=False,
+        #     )
+
+        self.conv = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding=padding if isinstance(padding, str) else (kernel_size - 1) // 2,
+            groups=groups,
+            bias=False,
+        )
+
 
         self.bn = nn.BatchNorm2d(out_channels)
 
@@ -124,12 +157,13 @@ class ConvBNAct(nn.Module):
 
 
 class LightConvBNAct(nn.Module):
+    """A combination of point-wise Conv layer and depth-wise Conv layers.
+    """
     def __init__(
         self,
         in_channels,
         out_channels,
         kernel_size,
-        groups=1,
         use_lab=False,
     ):
         super().__init__()
@@ -153,23 +187,3 @@ class LightConvBNAct(nn.Module):
         x = self.conv1(x)
         x = self.conv2(x)
         return x
-
-
-class EseModule(nn.Module):
-    def __init__(self, chs):
-        super().__init__()
-        self.conv = nn.Conv2d(
-            chs,
-            chs,
-            kernel_size=1,
-            stride=1,
-            padding=0,
-        )
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        identity = x
-        x = x.mean((2, 3), keepdim=True)
-        x = self.conv(x)
-        x = self.sigmoid(x)
-        return torch.mul(identity, x)
