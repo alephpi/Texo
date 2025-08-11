@@ -30,39 +30,39 @@ def safe_get_rank():
 
 class StemBlock(nn.Module):
     # for HGNetv2
-    def __init__(self, in_chs, mid_chs, out_chs, use_lab=False):
+    def __init__(self, in_channels, mid_channels, out_channels, use_lab=False):
         super().__init__()
         self.stem1 = ConvBNAct(
-            in_chs,
-            mid_chs,
+            in_channels,
+            mid_channels,
             kernel_size=3,
             stride=2,
             use_lab=use_lab,
         )
         self.stem2a = ConvBNAct(
-            mid_chs,
-            mid_chs // 2,
+            mid_channels,
+            mid_channels // 2,
             kernel_size=2,
             stride=1,
             use_lab=use_lab,
         )
         self.stem2b = ConvBNAct(
-            mid_chs // 2,
-            mid_chs,
+            mid_channels // 2,
+            mid_channels,
             kernel_size=2,
             stride=1,
             use_lab=use_lab,
         )
         self.stem3 = ConvBNAct(
-            mid_chs * 2,
-            mid_chs,
+            mid_channels * 2,
+            mid_channels,
             kernel_size=3,
             stride=2,
             use_lab=use_lab,
         )
         self.stem4 = ConvBNAct(
-            mid_chs,
-            out_chs,
+            mid_channels,
+            out_channels,
             kernel_size=1,
             stride=1,
             use_lab=use_lab,
@@ -84,9 +84,9 @@ class StemBlock(nn.Module):
 class HG_Block(nn.Module):
     def __init__(
         self,
-        in_chs,
-        mid_chs,
-        out_chs,
+        in_channels,
+        mid_channels,
+        out_channels,
         layer_num,
         kernel_size=3,
         residual=False,
@@ -103,8 +103,8 @@ class HG_Block(nn.Module):
             if light_block:
                 self.layers.append(
                     LightConvBNAct(
-                        in_chs if i == 0 else mid_chs,
-                        mid_chs,
+                        in_channels if i == 0 else mid_channels,
+                        mid_channels,
                         kernel_size=kernel_size,
                         use_lab=use_lab,
                     )
@@ -112,8 +112,8 @@ class HG_Block(nn.Module):
             else:
                 self.layers.append(
                     ConvBNAct(
-                        in_chs if i == 0 else mid_chs,
-                        mid_chs,
+                        in_channels if i == 0 else mid_channels,
+                        mid_channels,
                         kernel_size=kernel_size,
                         stride=1,
                         use_lab=use_lab,
@@ -121,18 +121,18 @@ class HG_Block(nn.Module):
                 )
 
         # feature aggregation
-        total_chs = in_chs + layer_num * mid_chs
+        total_chs = in_channels + layer_num * mid_channels
         if agg == "se":
             aggregation_squeeze_conv = ConvBNAct(
                 total_chs,
-                out_chs // 2,
+                out_channels // 2,
                 kernel_size=1,
                 stride=1,
                 use_lab=use_lab,
             )
             aggregation_excitation_conv = ConvBNAct(
-                out_chs // 2,
-                out_chs,
+                out_channels // 2,
+                out_channels,
                 kernel_size=1,
                 stride=1,
                 use_lab=use_lab,
@@ -144,12 +144,12 @@ class HG_Block(nn.Module):
         else:
             aggregation_conv = ConvBNAct(
                 total_chs,
-                out_chs,
+                out_channels,
                 kernel_size=1,
                 stride=1,
                 use_lab=use_lab,
             )
-            att = EseModule(out_chs)
+            att = EseModule(out_channels)
             self.aggregation = nn.Sequential(
                 aggregation_conv,
                 att,
@@ -173,9 +173,9 @@ class HG_Block(nn.Module):
 class HG_Stage(nn.Module):
     def __init__(
         self,
-        in_chs,
-        mid_chs,
-        out_chs,
+        in_channels,
+        mid_channels,
+        out_channels,
         block_num,
         layer_num,
         downsample=True,
@@ -189,11 +189,11 @@ class HG_Stage(nn.Module):
         self.downsample = downsample
         if downsample:
             self.downsample = ConvBNAct(
-                in_chs,
-                in_chs,
+                in_channels,
+                in_channels,
                 kernel_size=3,
                 stride=2,
-                groups=in_chs,
+                groups=in_channels,
                 use_act=False,
                 use_lab=use_lab,
             )
@@ -204,9 +204,9 @@ class HG_Stage(nn.Module):
         for i in range(block_num):
             blocks_list.append(
                 HG_Block(
-                    in_chs if i == 0 else out_chs,
-                    mid_chs,
-                    out_chs,
+                    in_channels if i == 0 else out_channels,
+                    mid_channels,
+                    out_channels,
                     layer_num,
                     residual=False if i == 0 else True,
                     kernel_size=kernel_size,
@@ -341,9 +341,9 @@ class HGNetv2(nn.Module):
 
         # stem
         self.stem = StemBlock(
-            in_chs=stem_channels[0],
-            mid_chs=stem_channels[1],
-            out_chs=stem_channels[2],
+            in_channels=stem_channels[0],
+            mid_channels=stem_channels[1],
+            out_channels=stem_channels[2],
             use_lab=use_lab,
         )
 

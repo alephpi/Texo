@@ -70,12 +70,11 @@ class LearnableAffineBlock(nn.Module):
     def forward(self, x):
         return self.scale * x + self.bias
 
-
 class ConvBNAct(nn.Module):
     def __init__(
         self,
-        in_chs,
-        out_chs,
+        in_channels,
+        out_channels,
         kernel_size,
         stride=1,
         groups=1,
@@ -84,28 +83,33 @@ class ConvBNAct(nn.Module):
         use_lab=False,
     ):
         super().__init__()
+
         self.use_act = use_act
         self.use_lab = use_lab
+
         if padding == "same":
             self.conv = nn.Sequential(
                 nn.ZeroPad2d([0, 1, 0, 1]),
-                nn.Conv2d(in_chs, out_chs, kernel_size, stride, groups=groups, bias=False),
+                nn.Conv2d(in_channels, out_channels, kernel_size, stride, groups=groups, bias=False),
             )
         else:
             self.conv = nn.Conv2d(
-                in_chs,
-                out_chs,
+                in_channels,
+                out_channels,
                 kernel_size,
                 stride,
                 padding=(kernel_size - 1) // 2,
                 groups=groups,
                 bias=False,
             )
-        self.bn = nn.BatchNorm2d(out_chs)
+
+        self.bn = nn.BatchNorm2d(out_channels)
+
         if self.use_act:
             self.act = nn.ReLU()
         else:
             self.act = nn.Identity()
+
         if self.use_act and self.use_lab:
             self.lab = LearnableAffineBlock()
         else:
@@ -122,25 +126,25 @@ class ConvBNAct(nn.Module):
 class LightConvBNAct(nn.Module):
     def __init__(
         self,
-        in_chs,
-        out_chs,
+        in_channels,
+        out_channels,
         kernel_size,
         groups=1,
         use_lab=False,
     ):
         super().__init__()
         self.conv1 = ConvBNAct(
-            in_chs,
-            out_chs,
+            in_channels,
+            out_channels,
             kernel_size=1,
             use_act=False,
             use_lab=use_lab,
         )
         self.conv2 = ConvBNAct(
-            out_chs,
-            out_chs,
+            out_channels,
+            out_channels,
             kernel_size=kernel_size,
-            groups=out_chs,
+            groups=out_channels,
             use_act=True,
             use_lab=use_lab,
         )
