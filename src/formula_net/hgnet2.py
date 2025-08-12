@@ -217,20 +217,11 @@ class HGNetv2(nn.Module):
         self,
         stem_channels,
         stage_config,
-        use_last_conv=True,
-        class_expand=2048,
-        dropout_prob=0.0,
-        class_num=1000,
-        return_idx=[1, 2, 3], #NOTE out_indices in paddleOCR
         freeze_stem_only=True,
         freeze_at=0,
         freeze_norm=True,
     ):
         super().__init__()
-        self.return_idx = return_idx
-
-        self._out_strides = [4, 8, 16, 32]
-        self._out_channels = [stage_config[k][2] for k in stage_config]
 
         # stem
         self.stem = StemBlock(
@@ -290,9 +281,5 @@ class HGNetv2(nn.Module):
 
     def forward(self, x):
         x = self.stem(x)
-        outs = []
-        for idx, stage in enumerate(self.stages):
-            x = stage(x)
-            if idx in self.return_idx:
-                outs.append(x)
-        return outs
+        x = self.stages(x)
+        return x
