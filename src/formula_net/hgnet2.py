@@ -205,6 +205,9 @@ class HG_Stage(nn.Module):
         return x
 
 
+# NOTE we follow the D-FINE structure which only model the backbone of PPHGNetV2 in HGNetV2
+# we seperate the task specific head into the task specific model
+# i.e. last_conv layers etc. in FormulaNet
 @register()
 class HGNetv2(nn.Module):
     """
