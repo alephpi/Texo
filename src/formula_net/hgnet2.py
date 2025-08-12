@@ -7,11 +7,9 @@ Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .layers import (
     ConvBNAct,
-    FrozenBatchNorm2d,
     LightConvBNAct,
     PaddingSameAsPaddleMaxPool2d,
 )
@@ -214,16 +212,7 @@ class HGNetv2(nn.Module):
     HGNetV2 backbone
     """
 
-
-
-    def __init__(
-        self,
-        stem_channels,
-        stage_config,
-        freeze_stem_only=True,
-        freeze_at=0,
-        freeze_norm=True,
-    ):
+    def __init__(self, stem_channels, stage_config):
         super().__init__()
 
         # stem
@@ -235,7 +224,7 @@ class HGNetv2(nn.Module):
 
         # stages
         self.stages = nn.ModuleList()
-        for i, k in enumerate(stage_config):
+        for k in stage_config:
             (
                 in_channels,
                 mid_channels,
@@ -258,29 +247,6 @@ class HGNetv2(nn.Module):
                     kernel_size,
                 )
             )
-
-        if freeze_at >= 0:
-            self._freeze_parameters(self.stem)
-            if not freeze_stem_only:
-                for i in range(min(freeze_at + 1, len(self.stages))):
-                    self._freeze_parameters(self.stages[i])
-
-        if freeze_norm:
-            self._freeze_norm(self)
-
-    def _freeze_norm(self, m: nn.Module):
-        if isinstance(m, nn.BatchNorm2d):
-            m = FrozenBatchNorm2d(m.num_features)
-        else:
-            for name, child in m.named_children():
-                _child = self._freeze_norm(child)
-                if _child is not child:
-                    setattr(m, name, _child)
-        return m
-
-    def _freeze_parameters(self, m: nn.Module):
-        for p in m.parameters():
-            p.requires_grad = False
 
     def forward(self, x):
         x = self.stem(x)
