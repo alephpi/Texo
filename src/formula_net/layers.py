@@ -80,15 +80,6 @@ def freeze_batch_norm2d(module: nn.Module) -> nn.Module:
                 setattr(module, name, _child)
     return module
 
-class LearnableAffineBlock(nn.Module):
-    def __init__(self, scale_value=1.0, bias_value=0.0):
-        super().__init__()
-        self.scale = nn.Parameter(torch.tensor([scale_value]), requires_grad=True)
-        self.bias = nn.Parameter(torch.tensor([bias_value]), requires_grad=True)
-
-    def forward(self, x):
-        return self.scale * x + self.bias
-
 class ConvBNAct(nn.Module):
     """A combination of Conv, BN and activation layer.
     """
@@ -101,12 +92,10 @@ class ConvBNAct(nn.Module):
         groups=1,
         padding=1,
         use_act=True,
-        use_lab=False,
     ):
         super().__init__()
 
         self.use_act = use_act
-        self.use_lab = use_lab
 
         # NOTE the original padding is different from https://github.com/frotms/PaddleOCR2Pytorch/blob/main/pytorchocr/modeling/backbones/rec_pphgnetv2.py#L325
         # if padding == "same":
@@ -135,7 +124,6 @@ class ConvBNAct(nn.Module):
             bias=False,
         )
 
-
         self.bn = nn.BatchNorm2d(out_channels)
 
         if self.use_act:
@@ -143,16 +131,10 @@ class ConvBNAct(nn.Module):
         else:
             self.act = nn.Identity()
 
-        if self.use_act and self.use_lab:
-            self.lab = LearnableAffineBlock()
-        else:
-            self.lab = nn.Identity()
-
     def forward(self, x):
         x = self.conv(x)
         x = self.bn(x)
         x = self.act(x)
-        x = self.lab(x)
         return x
 
 
@@ -164,7 +146,6 @@ class LightConvBNAct(nn.Module):
         in_channels,
         out_channels,
         kernel_size,
-        use_lab=False,
     ):
         super().__init__()
         self.conv1 = ConvBNAct(
@@ -172,7 +153,6 @@ class LightConvBNAct(nn.Module):
             out_channels,
             kernel_size=1,
             use_act=False,
-            use_lab=use_lab,
         )
         self.conv2 = ConvBNAct(
             out_channels,
@@ -180,7 +160,6 @@ class LightConvBNAct(nn.Module):
             kernel_size=kernel_size,
             groups=out_channels,
             use_act=True,
-            use_lab=use_lab,
         )
 
     def forward(self, x):
