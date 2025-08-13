@@ -60,10 +60,10 @@ Since we focus on the math expression recognition, UniMERNet is a good start poi
 # Stats
 | model   | MixTeX      | MixTeX2     | TexTeller3     | GOT-OCR-2.0    | UniMERNet-B    | UniMERNet-S   | UniMERNet-T   | PPFormulaNet-S   | PPFormulaNet-Plus-M |
 | ------- | ----------- | ----------- | -------------- | -------------- | -------------- | ------------- | ------------- | ---------------- | ------------------- |
-| encoder | SwinT 27M   | SwinT 48M   | ViT 86M        | ViTDet 95M     | SwinT 103M     | SwinT 58M     | SwinT  25M    | PPHGNetV2-B4 20M | PPHGNetV2-B6 75M    |
+| encoder | SwinT 27M   | SwinT 48M   | ViT 86M        | ViTDet 95M     | SwinT 103M     | SwinT 58M     | SwinT  25M    | PPHGNetV2-B4 14M | PPHGNetV2-B6 75M    |
 | decoder | Roberta 58M | GPT2 80M    | Roberta 211M   | Qwen2 463M     | MBart 221M     | MBart 144M    | MBart 81M     | MBart 44M        | MBart 78M           |
 | lm head | 略          | 30K*768=23M | 15K*1024=15.4M | 152K*1024=155M | 50K*1024=51.2M | 50K*768=38.4M | 50K*512=25.6M | 50K*384=19.2M    | 50K*512=25.6M       |
-| total   | 85M         | 128M        | 298M           | 560M           | 325M           | 202M          | 107M          | 64M              | 154M                |
+| total   | 85M         | 128M        | 298M           | 560M           | 325M           | 202M          | 107M          | 58M              | 154M                |
 
 where TexTeller is based on TrOCR, UniMERNet is based on Donut, which means they have similar architecture and differs only on training data.
 After reading all the paper or readme file, in my intuition, the MER ability of these models should have the following rank:
