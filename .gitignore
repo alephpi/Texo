@@ -204,7 +204,6 @@ __marimo__/
 
 node_modules/
 *.onnx
-*.png
 data/dataset
 *.ipynb
 !src/formula_net/convert.log
