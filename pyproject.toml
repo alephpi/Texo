@@ -19,6 +19,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "jupyterlab>=4.4.5",
+    "torchinfo>=1.8.0",
 ]
 
 [tool.uv.pip]
