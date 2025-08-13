@@ -9,23 +9,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .layers import ConvBNAct, FrozenBatchNorm2d, LightConvBNAct
-from .utils import register
+from .layers import ConvBNAct, LightConvBNAct
 
 __all__ = ["HGNetv2"]
-
-def safe_barrier():
-    if torch.distributed.is_available() and torch.distributed.is_initialized():
-        torch.distributed.barrier()
-    else:
-        pass
-
-def safe_get_rank():
-    if torch.distributed.is_available() and torch.distributed.is_initialized():
-        return torch.distributed.get_rank()
-    else:
-        return 0
-
 class StemBlock(nn.Module):
     # for HGNetv2
     def __init__(self, in_channels, mid_channels, out_channels):
@@ -195,7 +181,6 @@ class HG_Stage(nn.Module):
 # NOTE we follow the D-FINE structure which only model the backbone of PPHGNetV2 in HGNetV2
 # we seperate the task specific head into the task specific model
 # i.e. last_conv layers etc. in FormulaNet
-@register()
 class HGNetv2(nn.Module):
     """
     HGNetV2 backbone
