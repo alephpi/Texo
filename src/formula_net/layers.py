@@ -1,5 +1,5 @@
 """
-Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
+Adapted from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
@@ -90,36 +90,23 @@ class ConvBNAct(nn.Module):
         kernel_size=3,
         stride=1,
         groups=1,
-        padding=1,
         use_act=True,
     ):
         super().__init__()
 
         self.use_act = use_act
 
-        # NOTE the original padding is different from https://github.com/frotms/PaddleOCR2Pytorch/blob/main/pytorchocr/modeling/backbones/rec_pphgnetv2.py#L325
-        # if padding == "same":
-        #     self.conv = nn.Sequential(
-        #         nn.ZeroPad2d([0, 1, 0, 1]),
-        #         nn.Conv2d(in_channels, out_channels, kernel_size, stride, groups=groups, bias=False),
-        #     )
-        # else:
-        #     self.conv = nn.Conv2d(
-        #         in_channels,
-        #         out_channels,
-        #         kernel_size,
-        #         stride,
-        #         padding=(kernel_size - 1) // 2,
-        #         groups=groups,
-        #         bias=False,
-        #     )
+        # NOTE that the padding implementation is different across codebases
+        # paddle padding is different from pytorch padding so pytorchOCR defines PaddingSameAsPaddleMaxPool2d
+        # D-FINE just uses F.pad(x, [0,1,0,1]), which is equivalent to it in this particular (kernel_size, stride) setting
+        # we follow D-FINE and delete the condition expression here since the `padding` argument of ConvBNAct is never used in D-FINE
 
         self.conv = nn.Conv2d(
             in_channels,
             out_channels,
             kernel_size,
             stride,
-            padding=padding if isinstance(padding, str) else (kernel_size - 1) // 2,
+            padding= (kernel_size - 1) // 2,
             groups=groups,
             bias=False,
         )
@@ -128,13 +115,12 @@ class ConvBNAct(nn.Module):
 
         if self.use_act:
             self.act = nn.ReLU()
-        else:
-            self.act = nn.Identity()
 
     def forward(self, x):
         x = self.conv(x)
         x = self.bn(x)
-        x = self.act(x)
+        if self.use_act:
+            x = self.act(x)
         return x
 
 

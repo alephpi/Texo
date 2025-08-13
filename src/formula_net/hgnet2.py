@@ -7,6 +7,7 @@ Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from .layers import (
     ConvBNAct,
@@ -44,20 +45,18 @@ class StemBlock(nn.Module):
             mid_channels // 2,
             kernel_size=2,
             stride=1,
-            padding="same",
         )
         self.stem2b = ConvBNAct(
             mid_channels // 2,
             mid_channels,
             kernel_size=2,
             stride=1,
-            padding="same",
         )
         self.stem3 = ConvBNAct(
             mid_channels * 2,
             mid_channels,
             kernel_size=3,
-            stride=2,  # NOTE in paddleOCR, this stride can be 1 if it is text recognition task
+            stride=2,
         )
         self.stem4 = ConvBNAct(
             mid_channels,
@@ -65,18 +64,17 @@ class StemBlock(nn.Module):
             kernel_size=1,
             stride=1,
         )
-        # TODO check whether this implementation is equivalent to paddleOCR
         self.pool = nn.MaxPool2d(kernel_size=2, stride=1, ceil_mode=True)
-        # Paddle Detection
-        # self.pool = nn.MaxPool2d(kernel_size=2, stride=1, ceil_mode=True, padding="SAME")
+        # we don't use PaddleOCR2Pytorch implementation is since it will create a wrapper for pooling layer
+        # which we don't want as we want to have a network structure as closer as possible to PPFormulaNet
         # PaddleOCR2Pytorch
         # self.pool = PaddingSameAsPaddleMaxPool2d(kernel_size=2, stride=1)
 
     def forward(self, x):
         x = self.stem1(x)
-        # x = F.pad(x, (0, 1, 0, 1))
+        x = F.pad(x, (0, 1, 0, 1))
         x2 = self.stem2a(x)
-        # x2 = F.pad(x2, (0, 1, 0, 1))
+        x2 = F.pad(x2, (0, 1, 0, 1))
         x2 = self.stem2b(x2)
         x1 = self.pool(x)
         x = torch.cat([x1, x2], dim=1)
@@ -121,23 +119,18 @@ class HG_Block(nn.Module):
 
         # feature aggregation
         total_channels = in_channels + layer_num * mid_channels
-        aggregation_squeeze_conv = ConvBNAct(
+        self.aggregation_squeeze_conv = ConvBNAct(
             total_channels,
             out_channels // 2,
             kernel_size=1,
             stride=1,
         )
-        aggregation_excitation_conv = ConvBNAct(
+        self.aggregation_excitation_conv = ConvBNAct(
             out_channels // 2,
             out_channels,
             kernel_size=1,
             stride=1,
         )
-        self.aggregation = nn.Sequential(
-            aggregation_squeeze_conv,
-            aggregation_excitation_conv,
-        )
-
         # self.drop_path = nn.Dropout(drop_path) if drop_path else nn.Identity()
 
     def forward(self, x):
@@ -147,7 +140,8 @@ class HG_Block(nn.Module):
             x = layer(x)
             output.append(x)
         x = torch.cat(output, dim=1)
-        x = self.aggregation(x)
+        x = self.aggregation_squeeze_conv(x)
+        x = self.aggregation_excitation_conv(x)
         if self.residual:
             # x = self.drop_path(x) + identity
             x += identity
@@ -168,7 +162,7 @@ class HG_Stage(nn.Module):
         # drop_path=0.0,
     ):
         super().__init__()
-        self.downsample = downsample
+        self.use_downsample = downsample
         if downsample:
             self.downsample = ConvBNAct(
                 in_channels,
@@ -178,8 +172,6 @@ class HG_Stage(nn.Module):
                 groups=in_channels,
                 use_act=False,
             )
-        else:
-            self.downsample = nn.Identity()
 
         blocks_list = []
         for i in range(block_num):
@@ -198,7 +190,8 @@ class HG_Stage(nn.Module):
         self.blocks = nn.Sequential(*blocks_list)
 
     def forward(self, x):
-        x = self.downsample(x)
+        if self.use_downsample:
+            x = self.downsample(x)
         x = self.blocks(x)
         return x
 
@@ -250,5 +243,6 @@ class HGNetv2(nn.Module):
 
     def forward(self, x):
         x = self.stem(x)
-        x = self.stages(x)
+        for stage in self.stages:
+            x = stage(x)
         return x
