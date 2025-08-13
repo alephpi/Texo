@@ -9,11 +9,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .layers import (
-    ConvBNAct,
-    LightConvBNAct,
-    PaddingSameAsPaddleMaxPool2d,
-)
+from .layers import ConvBNAct, FrozenBatchNorm2d, LightConvBNAct
 from .utils import register
 
 __all__ = ["HGNetv2"]
