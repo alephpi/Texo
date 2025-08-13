@@ -91,6 +91,8 @@ In conclusion, we choose the PP-FormulaNet as our architecture, which has the be
 - [ ] 5. Train a vision encoder-decoder model on normalized paired-corpus(image-latex). 
   - [x] Encoder: convert PP-HGNetV2 to pytorch
   - [x] Decoder: ~~migrate the UniMERNet decoder(customized MBart), refer to https://github.com/ParaN3xus/my-unimernet~~ no need to migrate since I finally find that PP-FormulaNet just uses the vanilla MBart decoder without the SqueezeAttention operation.
+  - [ ] Adapt to transformers.VisionEncoderDecoder
+  - [ ] Adapt image preprocessing for training and inference
 
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
