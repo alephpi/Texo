@@ -46,6 +46,7 @@
 # Misc
 - [TrOCR](https://github.com/microsoft/unilm/tree/master/trocr)
 - [chineseocr_lite](http://github.com/DayBreak-u/chineseocr_lite): a dbnet 0.9M(text region detection), anglenet 0.19M(text orientation detection), crnn_lite_lstm 1.31M(text recognition).
+- [paddle to pytorch](https://zhuanlan.zhihu.com/p/335753926)
 
 # Design
 - A [blog](https://lilianweng.github.io/posts/2022-06-09-vlm/) that explains 4 types of VLM paradigm, including the two choices we have here: 
@@ -88,8 +89,8 @@ In conclusion, we choose the PP-FormulaNet as our architecture, which has the be
 - [x] 3. Collect a massive mono-corpus of latex math mode codes.
 - [x] 4. Train a tokenizer (with hard-coded tokens) on the normalized mono-corpus.
 - [ ] 5. Train a vision encoder-decoder model on normalized paired-corpus(image-latex). 
-  - [ ] Encoder: convert PP-HGNetV2 to pytorch
-  - [ ] Decoder: migrate the UniMERNet decoder(customized MBart), refer to https://github.com/ParaN3xus/my-unimernet
+  - [x] Encoder: convert PP-HGNetV2 to pytorch
+  - [x] Decoder: ~~migrate the UniMERNet decoder(customized MBart), refer to https://github.com/ParaN3xus/my-unimernet~~ no need to migrate since I finally find that PP-FormulaNet just uses the vanilla MBart decoder without the SqueezeAttention operation.
 
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
@@ -155,13 +156,13 @@ UniMER-1M 数据集的问题：
 
 PaddleOCR 中的 PPHGNetv2 实现非常费解，我们找到了 D-FINE 的实现，虽然二者任务不同但骨干网络相同。
 
+PPFormulaNet 并未使用 ESE 层和 LAB 层，故从代码中删去。
+
 PPFormulaNet-S 的架构及模型参数量（单位 M）：
 ```
-(Encoder)pphgnet_b4 19.89
+(Encoder)pphgnet_b4 13.59
   (stem) 0.03
   (stages) 13.57
-  (last_conv) 4.19 (2048*2048)
-  (fc) 2.10 (2048*1024)
 
 (enc_to_dec_proj) 0.79 (2048*384)
 

@@ -207,3 +207,4 @@ node_modules/
 *.png
 data/dataset
 *.ipynb
+!src/formula_net/convert.log
