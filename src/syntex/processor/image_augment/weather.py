@@ -1,14 +1,14 @@
 import math
 from io import BytesIO
 
+import albumentations as alb
 import cv2
 import numpy as np
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 from pkg_resources import resource_filename
 from wand.image import Image as WandImage
-import albumentations as alb
 
-from .ops import plasma_fractal
+from .robustness import plasma_fractal
 
 
 class Fog(alb.ImageOnlyTransform):
