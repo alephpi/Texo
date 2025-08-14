@@ -1,48 +1,39 @@
-# coding=utf-8
-# Copyright 2022 The HuggingFace Inc. team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""Image processor class for ViT."""
+# adapted from https://github.com/ParaN3xus/my-unimernet/blob/46f7ee83bbb6a61c83776e0c33b300a17d02d1d2/unimernet/components/processor/image_processor.py
+# refer to https://github.com/opendatalab/UniMERNet/blob/41659a39d683de1de9cdbcc6a941bf9a2efdd55e/unimernet/processors/formula_processor.py
 
+import math
 from typing import Dict, List, Optional, Union
 
+import albumentations as alb
+import cv2
 import numpy as np
-
+from albumentations.pytorch import ToTensorV2
+from PIL import Image, ImageOps
 from torch import TensorType
-from transformers.image_processing_utils import BaseImageProcessor, BatchFeature, get_size_dict
+from torchvision.transforms.functional import resize
+from transformers.image_processing_utils import (
+    BaseImageProcessor,
+    BatchFeature,
+    get_size_dict,
+)
 from transformers.image_transforms import convert_to_rgb
 from transformers.image_utils import (
-    IMAGENET_STANDARD_MEAN,
-    IMAGENET_STANDARD_STD,
     ImageInput,
     make_list_of_images,
     valid_images,
     validate_preprocess_arguments,
 )
 from transformers.utils import filter_out_non_signature_kwargs, logging
-from PIL import Image, ImageOps
-import cv2
-from torchvision.transforms.functional import resize
-from albumentations.pytorch import ToTensorV2
-import albumentations as alb
+
 from .image_utils.nougat import Bitmap, Dilation, Erosion
-from .image_utils.weathers import Fog, Frost, Snow, Rain, Shadow
-import math
+from .image_utils.weathers import Fog, Frost, Rain, Shadow, Snow
+
+UNIMERNET_STANDARD_MEAN = (0.7931, 0.7931, 0.7931)
+UNIMERNET_STANDARD_STD = (0.1738, 0.1738, 0.1738)
 
 logger = logging.get_logger(__name__)
 
-
-class UniMERNetBaseImageProcessor(BaseImageProcessor):
+class MERBaseImageProcessor(BaseImageProcessor):
     model_input_names = ["pixel_values"]
 
     def __init__(
@@ -56,14 +47,14 @@ class UniMERNetBaseImageProcessor(BaseImageProcessor):
         size = size if size is not None else {"height": 224, "width": 224}
         size = get_size_dict(size)
         self.size = size
-        self.image_mean = image_mean if image_mean is not None else IMAGENET_STANDARD_MEAN
-        self.image_std = image_std if image_std is not None else IMAGENET_STANDARD_STD
+        self.image_mean = image_mean if image_mean is not None else UNIMERNET_STANDARD_MEAN
+        self.image_std = image_std if image_std is not None else UNIMERNET_STANDARD_STD
 
     def resize(
         self,
         image: Image.Image,
         size: Dict[str, int],
-        random_padding: False,
+        random_padding: bool = False,
     ) -> np.ndarray:
         """
         Resize an image to `(size["height"], size["width"])` by thumbnailing and padding.
@@ -197,7 +188,7 @@ class UniMERNetBaseImageProcessor(BaseImageProcessor):
         return BatchFeature(data=data, tensor_type=return_tensors)
 
 
-class UniMERNetTrainImageProcessor(UniMERNetBaseImageProcessor):
+class UniMERNetTrainImageProcessor(MERBaseImageProcessor):
     def __init__(
         self,
         size: Optional[Dict[str, int]] = None,
@@ -261,7 +252,7 @@ class UniMERNetTrainImageProcessor(UniMERNetBaseImageProcessor):
         return super().postprocess(images, return_tensors)
 
 
-class UniMERNetEvalImageProcessor(UniMERNetBaseImageProcessor):
+class UniMERNetEvalImageProcessor(MERBaseImageProcessor):
     def __init__(
         self,
         size: Optional[Dict[str, int]] = None,
