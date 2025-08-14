@@ -85,12 +85,6 @@ class MERBaseImageProcessor(BaseImageProcessor):
 
     @staticmethod
     def crop_margin(img: Image.Image) -> Image.Image:
-        if not isinstance(img, Image.Image):
-            logger.warning_once(
-                "Passing incorrect img to crop_margin!"
-            )
-            return image
-
         data = np.array(img.convert("L"))
         data = data.astype(np.uint8)
         max_val = data.max()
@@ -100,9 +94,8 @@ class MERBaseImageProcessor(BaseImageProcessor):
         data = (data - min_val) / (max_val - min_val) * 255
         gray = 255 * (data < 200).astype(np.uint8)
 
-        coords = cv2.findNonZero(gray)  # Find all non-zero points (text)
-        # Find minimum spanning bounding box
-        a, b, w, h = cv2.boundingRect(coords)
+        coords = cv2.findNonZero(gray)  # Find all non-zero points (text pixels)
+        a, b, w, h = cv2.boundingRect(coords)  # Find minimum spanning bounding box
         return img.crop((a, b, w + a, h + b))
 
     @filter_out_non_signature_kwargs()
