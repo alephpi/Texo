@@ -14,7 +14,7 @@ from PIL import Image, ImageOps
 UNIMERNET_MEAN = (0.7931, 0.7931, 0.7931)
 UNIMERNET_STD = (0.1738, 0.1738, 0.1738)
 
-def resize(image: Image.Image, image_size: Dict[str, int], random_padding: bool = False):
+def resize(image: Image.Image, image_size: Dict[str, int], random_padding = False):
     """
     Resize an image to `(size["height"], size["width"])` by thumbnailing and padding.
     """
@@ -38,19 +38,28 @@ def resize(image: Image.Image, image_size: Dict[str, int], random_padding: bool 
     )
     return ImageOps.expand(image, padding)
 
-def crop_margin(img: Image.Image) -> Image.Image:
-    data = np.array(img.convert("L"))
+def crop_margin(image: Image.Image) -> Image.Image:
+    data = np.array(image.convert("L"))
     data = data.astype(np.uint8)
     max_val = data.max()
     min_val = data.min()
     if max_val == min_val:
-        return img
+        return image
     data = (data - min_val) / (max_val - min_val) * 255
     gray = 255 * (data < 200).astype(np.uint8)
 
     coords = cv2.findNonZero(gray)  # Find all non-zero points (text pixels)
     a, b, w, h = cv2.boundingRect(coords)  # Find minimum spanning bounding box
-    return img.crop((a, b, w + a, h + b))
+    return image.crop((a, b, w + a, h + b))
+
+# 去白边，按比例缩放，加黑边
+def preprocess(image: Image.Image, image_size: Dict[str, int], random_padding=False):
+    """preprocess the image by remove white margins, resize to `image_size` with ratio preserved and padding black pixels.
+    """
+    image_ = image if image.mode == "RGB" else image.convert("RGB")
+    image_ = crop_margin(image_)
+    image_ = resize(image=image_, image_size=image_size, random_padding=random_padding)
+    return image_
 
 
 class BaseMERImageProcessor:
@@ -104,12 +113,13 @@ class TrainMERImageProcessor(BaseMERImageProcessor):
     def process(self, image: Image.Image):
         assert isinstance(image, Image.Image), "image must be a PIL.Image.Image"
 
-        image_ = image if image.mode == "RGB" else image.convert("RGB")
-        image_ = crop_margin(image)
-        image_ = resize(image=image, image_size=self.image_size, random_padding=True)
+        image_ = preprocess(image, self.image_size, random_padding=True)
+        image_ = np.array(image_)
 
-        return self.transform(image_)['image']
+        return self.transform(image=image_)['image']
 
+    def __call__(self, image):
+        return self.process(image)
 class EvalMERImageProcessor(BaseMERImageProcessor):
     def __init__(self, image_size: Dict[str, int] = {'height': 384, 'width': 384}) -> None:
         super().__init__(image_size)
@@ -124,8 +134,10 @@ class EvalMERImageProcessor(BaseMERImageProcessor):
     def process(self, image: Image.Image):
         assert isinstance(image, Image.Image), "image must be a PIL.Image.Image"
 
-        image_ = image if image.mode == "RGB" else image.convert("RGB")
-        image_ = crop_margin(image)
-        image_ = resize(image=image, image_size=self.image_size, random_padding=False)
+        image_ = preprocess(image, self.image_size, random_padding=False)
+        image_ = np.array(image_)
 
-        return self.transform(image_)['image']
+        return self.transform(image=image_)['image']
+
+    def __call__(self, image):
+        return self.process(image)
