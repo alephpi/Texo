@@ -1,6 +1,7 @@
 # Datasets
 - TexTeller
 - img2latex
+- UniMer-1M
 
 # Vision Encoders
 - vit
@@ -92,7 +93,11 @@ In conclusion, we choose the PP-FormulaNet as our architecture, which has the be
   - [x] Encoder: convert PP-HGNetV2 to pytorch
   - [x] Decoder: ~~migrate the UniMERNet decoder(customized MBart), refer to https://github.com/ParaN3xus/my-unimernet~~ no need to migrate since I finally find that PP-FormulaNet just uses the vanilla MBart decoder without the SqueezeAttention operation.
   - [ ] Adapt to transformers.VisionEncoderDecoder
-  - [ ] Adapt image preprocessing for training and inference
+  - [x] image preprocessing for training and inference.
+  - [ ] text preprocessing
+  - [ ] dataset
+  - [ ] dataloader
+    - [ ] sequence bucket?
 
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
@@ -139,6 +144,18 @@ We leave the community to extend them.
 ## Evaluation
 Use UniMERNet metric:
 MixTex TexTeller UniMERNet-tiny,small,base
+
+## Acknowledgements
+
+- [transformers](https://github.com/huggingface/transformers): framework, model decoder, tokenizer
+- [UniMERNet](https://github.com/opendatalab/UniMERNet): dataset, image processor
+- [Im2Markup](https://github.com/harvardnlp/im2markup): latex preprocessing
+- [KaTeX](https://github.com/KaTeX/KaTeX): latex vocabulary for training tokenizer and latex parser for preprocessing
+- [my-unimernet](https://github.com/ParaN3xus/my-unimernet/blob/main/unimernet/components/processor/image_processor.py): image processor (plus a nice codebase to demystify UniMERNet)
+- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/main/ppocr/modeling/backbones/rec_pphgnetv2.py): model architecture, pretraining weights
+- [PaddleOCR2Pytorch](https://github.com/frotms/PaddleOCR2Pytorch) and [D-FINE](https://github.com/Peterande/D-FINE): model encoder implementation
+- [Im2Markup](https://github.com/harvardnlp/im2markup), [LaTeX-OCR](https://github.com/lukas-blecher/LaTeX-OCR) and [TrOCR](https://github.com/microsoft/unilm/tree/master/trocr): pioneer
+- [MixTeX](https://github.com/RQLuo/MixTeX-Latex-OCR) and [TexTeller](https://github.com/OleehyO/TexTeller): motivation
 
 ## Notes
 UniMERNet 的论文是比较详细的，并且它参考的前作 Donut 的论文亦如是。Donut 论文中提到 text reading 预训练（其实就是 OCR）对涨点帮助较大，但 Donut 相当于是文档理解模型，它的下游任务是比较多的，而它又自称是 OCR-free 模型，其实不妨说是把传统多步的文档理解流程中的 OCR 模块嵌入到预训练知识中。

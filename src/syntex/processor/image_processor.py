@@ -10,6 +10,7 @@ import numpy as np
 import torchvision.transforms.functional as F
 from albumentations.pytorch import ToTensorV2
 from PIL import Image, ImageOps
+from torch import Tensor
 
 UNIMERNET_MEAN = (0.7931, 0.7931, 0.7931)
 UNIMERNET_STD = (0.1738, 0.1738, 0.1738)
@@ -71,7 +72,7 @@ class BaseMERImageProcessor:
     def __call__(self, image):
         return self.process(image)
 
-    def process(self,image: Image.Image):
+    def process(self,image: Image.Image) -> Tensor:
         raise NotImplementedError
 
 class TrainMERImageProcessor(BaseMERImageProcessor):
@@ -109,7 +110,6 @@ class TrainMERImageProcessor(BaseMERImageProcessor):
             ]
         )
 
-    # TODO batch mode preprocessing
     def process(self, image: Image.Image):
         assert isinstance(image, Image.Image), "image must be a PIL.Image.Image"
 
