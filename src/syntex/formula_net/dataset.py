@@ -53,8 +53,12 @@ class MERDataset(Dataset):
 
         # batch-process text in collate_fn
         text_encoding = self.text_processor(texts)
+        # we remove the bos token `<s>` to construct the labels
+        # since the transformers.decoder will automatically shift it to the right as the decoder_input_ids
+        labels = text_encoding["input_ids"][:, 1:]
+        attention_mask = text_encoding["attention_mask"][:, 1:]
         return {
             "pixel_values": images,
-            "input_ids": text_encoding["input_ids"],
-            "attention_mask": text_encoding["attention_mask"]
+            "labels": labels,
+            "attention_mask": attention_mask
         }
