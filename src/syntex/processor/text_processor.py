@@ -1,17 +1,19 @@
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
-TextProcessorConfig = {
-    "tokenizer_path": "./data/tokenizer/tokenizer.json",
+default_config = {
+    "tokenizer_path": "../data/tokenizer",
+    "add_special_tokens": True,
     "max_length": 1024,
-    "padding": "max_length",
+    "padding": "longest",
     "truncation": True,
     "return_tensors": "pt",
-    "return_attention_mask": True
+    "return_attention_mask": True,
 }
 
 class TextProcessor:
-    def __init__(self, tokenizer_path: str, tokenizer_config: dict[str,str]):
-        self.tokenizer: PreTrainedTokenizerFast = PreTrainedTokenizerFast.from_pretrained(tokenizer_path)
+    def __init__(self, tokenizer_config: dict = default_config):
+        self.tokenizer: PreTrainedTokenizerFast = \
+         PreTrainedTokenizerFast.from_pretrained(tokenizer_config.pop("tokenizer_path"))
         self.tokenizer_config = tokenizer_config
 
         # 确保tokenizer有pad_token，如果没有则使用eos_token
