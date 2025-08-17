@@ -1,5 +1,4 @@
 import torch
-import torch.nn as nn
 from lightning import LightningModule
 from transformers import MBartConfig, MBartForCausalLM, VisionEncoderDecoderModel
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup

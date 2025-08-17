@@ -1,6 +1,6 @@
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
-default_config = {
+text_processor_default_config = {
     "tokenizer_path": "../data/tokenizer",
     "add_special_tokens": True,
     "max_length": 1024,
@@ -11,7 +11,7 @@ default_config = {
 }
 
 class TextProcessor:
-    def __init__(self, tokenizer_config: dict = default_config):
+    def __init__(self, tokenizer_config: dict = text_processor_default_config):
         self.tokenizer: PreTrainedTokenizerFast = \
          PreTrainedTokenizerFast.from_pretrained(tokenizer_config.pop("tokenizer_path"))
         self.tokenizer_config = tokenizer_config
