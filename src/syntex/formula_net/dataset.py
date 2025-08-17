@@ -28,7 +28,7 @@ class MERDataset(Dataset):
         self.texts = [text.strip() for text in self.texts]  # 去除换行符和首尾空格
 
         # 验证图像文件是否存在
-        self.padding_digits = len(str(len(self.texts)))
+        self.padding_digits = 7 # for UniMER-1M
         self.valid_indices = []
         for idx in range(len(self.texts)):
             img_path = Path(image_dir) / f"{idx:0{self.padding_digits}d}.png"
@@ -92,7 +92,7 @@ class MERDataModule(LightningDataModule):
     def __init__(self, data_config: dict):
         super().__init__()
         self.data_config = data_config
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters()
         self.train_dataset: Optional[MERDataset] = None
         self.val_dataset: Optional[MERDataset] = None
         self.test_dataset: Optional[MERDataset] = None

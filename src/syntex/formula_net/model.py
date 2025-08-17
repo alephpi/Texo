@@ -43,6 +43,7 @@ MODEL_CONFIG = {
 }
 
 TRAINING_CONFIG = {
+    "max_steps": 3e5,
     "optimizer": {
         "lr": 1e-4,
         "betas": (0.9, 0.999),
@@ -91,12 +92,12 @@ class FormulaNetLit(LightningModule):
     
     def training_step(self, batch, batch_idx):
         loss = self.model_step(batch, batch_idx)
-        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_loss", loss, on_step=True, logger=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
         loss = self.model_step(batch, batch_idx)
-        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_loss", loss, on_step=True, logger=True)
         return
 
     def configure_optimizers(self):

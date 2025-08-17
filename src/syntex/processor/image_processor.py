@@ -95,7 +95,7 @@ class TrainMERImageProcessor(BaseMERImageProcessor):
                         Bitmap(p=0.05),
                         alb.OneOf([Fog(), Frost(), Snow(), Rain(), Shadow()], p=0.2),
                         alb.OneOf([Erosion((2, 3)), Dilation((2, 3))], p=0.2),
-                        alb.Affine(scale=(0.85, 1.0), rotate=(-1, 1), interpolation=3, pborder_mode=0, fill=[255, 255, 255], p=1),
+                        alb.Affine(scale=(0.85, 1.0), rotate=(-1, 1), interpolation=3, border_mode=0, fill=[255, 255, 255], p=1),
                         alb.GridDistortion(distort_limit=0.1, interpolation=3, p=.5)],
                     p=.15),
                 # alb.InvertImg(p=.4), #NOTE no InvertImg in UniMERNet

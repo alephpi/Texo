@@ -80,7 +80,7 @@ class HGNetFormulaHF(PreTrainedModel):
         self.projection = nn.Linear(backbone_output_dim, config.hidden_size)
 
         if config.pretrained_backbone:
-            backbone_state_dict = torch.load(config.pretrained_backbone, map_location="cpu")
+            backbone_state_dict = torch.load(config.pretrained_backbone)
             self.backbone.load_state_dict(backbone_state_dict)
 
             if config.freeze_backbone:
@@ -105,9 +105,9 @@ class HGNetFormulaHF(PreTrainedModel):
 
     def forward(self, pixel_values, **kwargs):
         out = self.backbone(pixel_values)
+        out = out.flatten(2).transpose(1, 2)
         out = self.projection(out)
         # (B,C,H,W) -> (B,C,H*W) -> (B,H*W,C)
-        out = out.flatten(2).transpose(1, 2)
 
         return BaseModelOutput(last_hidden_state=out)
 

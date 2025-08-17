@@ -1,0 +1,57 @@
+output_dir: ${hydra:runtime.output_dir}
+model:
+  encoder:
+    stem_channels: [3, 32, 48]
+    stage_config:
+      stage1: [48, 48, 128, 1, false, false, 3, 6]
+      stage2: [128, 96, 512, 1, true, false, 3, 6]
+      stage3: [512, 192, 1024, 3, true, true, 5, 6]
+      stage4: [1024, 384, 2048, 1, true, true, 5, 6]
+    hidden_size: 384
+    pretrained_backbone: ./src/syntex/formula_net/formulanet_encoder_hgnetv2.pt
+  decoder:
+    vocab_size: 687
+    max_position_embeddings: 1024
+    d_model: 384
+    decoder_layers: 2
+    decoder_attention_heads: 16
+    decoder_ffn_dim: 1536
+    decoder_start_token_id: 2
+    bos_token_id: 2
+    eos_token_id: 3
+    pad_token_id: 0
+    forced_eos_token_id: 3
+    layer_norm_eps: 1e-5
+    is_decoder: true
+
+training:
+  max_steps: 3e5
+  lr_scheduler:
+    min_lr: 1e-8
+    num_training_steps: 3e5
+    num_warmup_steps: 5e3
+  optimizer:
+    lr: 1e-4
+    betas: [0.9, 0.999]
+    weight_decay: 0.05
+
+data:
+  train_image_dir: ./data/dataset/UniMER-1M_merged/images
+  train_text_path: ./data/dataset/UniMER-1M_merged/train_normalized_.txt
+  eval_image_dir: ./data/dataset/UniMER-Test/cpe
+  eval_text_path: ./data/dataset/UniMER-Test/cpe.txt
+  image_processor:
+    image_size:
+      width: 384
+      height: 384
+  text_processor:
+    tokenizer_path: ./data/tokenizer
+    tokenizer_config:
+      add_special_tokens: true
+      max_length: 1024
+      padding: longest
+      truncation: true
+      return_tensors: pt
+      return_attention_mask: true
+  batch_size: 8
+  num_workers: 10
