@@ -1,6 +1,6 @@
 import torch
 from lightning import LightningModule
-from transformers import MBartConfig, MBartForCausalLM, VisionEncoderDecoderModel
+from transformers import AutoConfig, AutoModel, MBartConfig, MBartForCausalLM, VisionEncoderDecoderModel
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
@@ -58,6 +58,9 @@ TRAINING_CONFIG = {
     }
 }
 
+AutoConfig.register("hgnet_formula", HGNetFormulaConfig)
+AutoModel.register(HGNetFormulaConfig, HGNetFormulaHF)
+
 class FormulaNetLit(LightningModule):
     def __init__(self, model_config, training_config):
         super().__init__()
@@ -70,6 +73,11 @@ class FormulaNetLit(LightningModule):
             encoder=HGNetFormulaHF(HGNetFormulaConfig(**self.model_config["encoder"])),
             decoder=MBartForCausalLM(MBartConfig(**self.model_config["decoder"])),
         )
+        # transformers.VisionEncoderDecoderModel is not smart enough to initialize from the encoder and decoder
+        # where we have to initialize the model.config manually as the following.
+        self.model.config.decoder_start_token_id = self.model.decoder.config.bos_token_id
+        self.model.config.pad_token_id = self.model.decoder.config.pad_token_id
+        self.model.config.eos_token_id = self.model.decoder.config.eos_token_id
 
         self.optimizer = torch.optim.AdamW(self.model.parameters(), **self.training_config["optimizer"])
         self.scheduler = get_cosine_with_min_lr_schedule_with_warmup(self.optimizer, **self.training_config["lr_scheduler"])

@@ -64,6 +64,8 @@ class MERDataset(Dataset):
         # we remove the bos token `<s>` to construct the labels
         # since the transformers.decoder will automatically shift it to the right as the decoder_input_ids
         labels = text_encoding["input_ids"][:, 1:]
+        # set padding token to -100(default padding value in transformers) for loss calculation
+        labels[labels == self.text_processor.tokenizer.pad_token_id] = -100
         attention_mask = text_encoding["attention_mask"][:, 1:]
         return {
             "pixel_values": images,

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
+from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutput
 
 from .hgnet2 import HGNetv2
@@ -111,9 +111,6 @@ class HGNetFormulaHF(PreTrainedModel):
 
         return BaseModelOutput(last_hidden_state=out)
 
-
-AutoConfig.register("hgnet_formula", HGNetFormulaConfig)
-AutoModel.register(HGNetFormulaConfig, HGNetFormulaHF)
 
 if __name__ == "__main__":
 
