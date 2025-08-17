@@ -204,7 +204,10 @@ __marimo__/
 
 node_modules/
 *.onnx
-data/dataset
 *.ipynb
 !src/formula_net/convert.log
 outputs
+!.gitkeep
+data/dataset/**/*
+!data/dataset/.gitkeep
+!data/dataset/**/*.py
