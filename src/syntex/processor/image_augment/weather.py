@@ -5,7 +5,7 @@ import albumentations as alb
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageOps
-from pkg_resources import resource_filename
+from pathlib import Path
 from wand.image import Image as WandImage
 
 from .robustness import plasma_fractal
@@ -53,6 +53,8 @@ class Frost(alb.ImageOnlyTransform):
         super().__init__(p=p)
         self.rng = np.random.default_rng()
         self.mag = mag
+        self.dir = Path(__file__) / "frost/"
+        self.filenames = ['frost1.png', 'frost2.png', 'frost3.png', 'frost4.jpg', 'frost5.jpg', 'frost6.jpg']
 
     def apply(self, img, **params):
         img = Image.fromarray(img.astype(np.uint8))
@@ -63,17 +65,9 @@ class Frost(alb.ImageOnlyTransform):
         else:
             index = self.mag
         c = c[index]
-
-        filename = [resource_filename(__name__, 'frost/frost1.png'),
-                    resource_filename(__name__, 'frost/frost2.png'),
-                    resource_filename(__name__, 'frost/frost3.png'),
-                    resource_filename(__name__, 'frost/frost4.jpg'),
-                    resource_filename(__name__, 'frost/frost5.jpg'),
-                    resource_filename(__name__, 'frost/frost6.jpg')]
-        index = self.rng.integers(0, len(filename))
-        filename = filename[index]
-        # Some images have transparency. Remove alpha channel.
-        frost = Image.open(filename).convert('RGB')
+        index = self.rng.integers(0, len(self.filenames))
+        filename = self.filenames[index]
+        frost = Image.open(self.dir.with_name(filename)).convert('RGB')
 
         # Resize the frost image to match the input image's dimensions
         f_w, f_h = frost.size
