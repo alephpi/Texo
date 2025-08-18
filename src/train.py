@@ -27,10 +27,12 @@ def main(cfg: DictConfig):
         precision="16-mixed",
         log_every_n_steps=50,
         max_steps=cfg.training.max_steps,
+        val_check_interval=1000,
         callbacks=[
             ModelCheckpoint(
-                filename = "{step}-{train_loss:.8f}",
-                save_top_k=10,
+                filename = "{step}-{train_loss:.4f}-{BLEU:.4f}-{edit_distance:.4f}",
+                save_top_k=-1,
+                save_last=True,
                 monitor="train_loss",
                 every_n_train_steps=1000,
             ),

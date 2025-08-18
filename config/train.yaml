@@ -1,5 +1,6 @@
 output_dir: ${hydra:runtime.output_dir}
 model:
+  tokenizer_path: ./data/tokenizer
   encoder:
     stem_channels: [3, 32, 48]
     stage_config:
