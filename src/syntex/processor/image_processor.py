@@ -86,14 +86,14 @@ class TrainMERImageProcessor(BaseMERImageProcessor):
             Frost,
             Rain,
             Shadow,
-            Snow,
+            # Snow,
         )
         self.transform = alb.Compose(
             [
                 alb.Compose(
                     [
                         Bitmap(p=0.05),
-                        alb.OneOf([Fog(), Frost(), Snow(), Rain(), Shadow()], p=0.2),
+                        alb.OneOf([Fog(), Frost(), Rain(), Shadow()], p=0.2),
                         alb.OneOf([Erosion((2, 3)), Dilation((2, 3))], p=0.2),
                         alb.Affine(scale=(0.85, 1.0), rotate=(-1, 1), interpolation=3, border_mode=0, fill=[255, 255, 255], p=1),
                         alb.GridDistortion(distort_limit=0.1, interpolation=3, p=.5)],

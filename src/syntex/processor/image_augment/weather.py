@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageOps
 from pathlib import Path
-from wand.image import Image as WandImage
+# from wand.image import Image as WandImage
 
 from .robustness import plasma_fractal
 
@@ -53,7 +53,7 @@ class Frost(alb.ImageOnlyTransform):
         super().__init__(p=p)
         self.rng = np.random.default_rng()
         self.mag = mag
-        self.dir = Path(__file__) / "frost/"
+        self.dir = Path(__file__).parent / "frost/"
         self.filenames = ['frost1.png', 'frost2.png', 'frost3.png', 'frost4.jpg', 'frost5.jpg', 'frost6.jpg']
 
     def apply(self, img, **params):
@@ -67,7 +67,7 @@ class Frost(alb.ImageOnlyTransform):
         c = c[index]
         index = self.rng.integers(0, len(self.filenames))
         filename = self.filenames[index]
-        frost = Image.open(self.dir.with_name(filename)).convert('RGB')
+        frost = Image.open(self.dir / filename).convert('RGB')
 
         # Resize the frost image to match the input image's dimensions
         f_w, f_h = frost.size
@@ -100,63 +100,63 @@ class Frost(alb.ImageOnlyTransform):
         return img
 
 
-class Snow(alb.ImageOnlyTransform):
-    def __init__(self, mag=-1,  p=1.):
-        super().__init__(p=p)
-        self.rng = np.random.default_rng()
-        self.mag = mag
+# class Snow(alb.ImageOnlyTransform):
+#     def __init__(self, mag=-1,  p=1.):
+#         super().__init__(p=p)
+#         self.rng = np.random.default_rng()
+#         self.mag = mag
 
-    def apply(self, img, **params):
-        img = Image.fromarray(img.astype(np.uint8))
-        w, h = img.size
-        c = [(0.1, 0.3, 3, 0.5, 10, 4, 0.8),
-             (0.2, 0.3, 2, 0.5, 12, 4, 0.7),
-             (0.55, 0.3, 4, 0.9, 12, 8, 0.7)]
-        if self.mag < 0 or self.mag >= len(c):
-            index = self.rng.integers(0, len(c))
-        else:
-            index = self.mag
-        c = c[index]
+#     def apply(self, img, **params):
+#         img = Image.fromarray(img.astype(np.uint8))
+#         w, h = img.size
+#         c = [(0.1, 0.3, 3, 0.5, 10, 4, 0.8),
+#              (0.2, 0.3, 2, 0.5, 12, 4, 0.7),
+#              (0.55, 0.3, 4, 0.9, 12, 8, 0.7)]
+#         if self.mag < 0 or self.mag >= len(c):
+#             index = self.rng.integers(0, len(c))
+#         else:
+#             index = self.mag
+#         c = c[index]
 
-        n_channels = len(img.getbands())
-        isgray = n_channels == 1
+#         n_channels = len(img.getbands())
+#         isgray = n_channels == 1
 
-        img = np.asarray(img, dtype=np.float32) / 255.
-        if isgray:
-            img = np.expand_dims(img, axis=2)
-            img = np.repeat(img, 3, axis=2)
+#         img = np.asarray(img, dtype=np.float32) / 255.
+#         if isgray:
+#             img = np.expand_dims(img, axis=2)
+#             img = np.repeat(img, 3, axis=2)
 
-        snow_layer = self.rng.normal(
-            size=img.shape[:2], loc=c[0], scale=c[1])  # [:2] for monochrome
+#         snow_layer = self.rng.normal(
+#             size=img.shape[:2], loc=c[0], scale=c[1])  # [:2] for monochrome
 
-        # snow_layer = clipped_zoom(snow_layer[..., np.newaxis], c[2])
-        snow_layer[snow_layer < c[3]] = 0
+#         # snow_layer = clipped_zoom(snow_layer[..., np.newaxis], c[2])
+#         snow_layer[snow_layer < c[3]] = 0
 
-        snow_layer = Image.fromarray(
-            (np.clip(snow_layer.squeeze(), 0, 1) * 255).astype(np.uint8), mode='L')
-        output = BytesIO()
-        snow_layer.save(output, format='PNG')
-        snow_layer = WandImage(blob=output.getvalue())
+#         snow_layer = Image.fromarray(
+#             (np.clip(snow_layer.squeeze(), 0, 1) * 255).astype(np.uint8), mode='L')
+#         output = BytesIO()
+#         snow_layer.save(output, format='PNG')
+#         snow_layer = WandImage(blob=output.getvalue())
 
-        snow_layer.motion_blur(
-            radius=c[4], sigma=c[5], angle=self.rng.uniform(-135, -45))
+#         snow_layer.motion_blur(
+#             radius=c[4], sigma=c[5], angle=self.rng.uniform(-135, -45))
 
-        snow_layer = cv2.imdecode(np.frombuffer(snow_layer.make_blob(), np.uint8),
-                                  cv2.IMREAD_UNCHANGED) / 255.
+#         snow_layer = cv2.imdecode(np.frombuffer(snow_layer.make_blob(), np.uint8),
+#                                   cv2.IMREAD_UNCHANGED) / 255.
 
-        # snow_layer = cv2.cvtColor(snow_layer, cv2.COLOR_BGR2RGB)
+#         # snow_layer = cv2.cvtColor(snow_layer, cv2.COLOR_BGR2RGB)
 
-        snow_layer = snow_layer[..., np.newaxis]
+#         snow_layer = snow_layer[..., np.newaxis]
 
-        img = c[6] * img
-        gray_img = (1 - c[6]) * np.maximum(img, cv2.cvtColor(img,
-                                                             cv2.COLOR_RGB2GRAY).reshape(h, w, 1) * 1.5 + 0.5)
-        img += gray_img
-        img = np.clip(img + snow_layer + np.rot90(snow_layer, k=2), 0, 1) * 255
-        img = img.astype(np.uint8)
-        if isgray:
-            img = np.squeeze(img)
-        return img
+#         img = c[6] * img
+#         gray_img = (1 - c[6]) * np.maximum(img, cv2.cvtColor(img,
+#                                                              cv2.COLOR_RGB2GRAY).reshape(h, w, 1) * 1.5 + 0.5)
+#         img += gray_img
+#         img = np.clip(img + snow_layer + np.rot90(snow_layer, k=2), 0, 1) * 255
+#         img = img.astype(np.uint8)
+#         if isgray:
+#             img = np.squeeze(img)
+#         return img
 
 
 class Rain(alb.ImageOnlyTransform):
