@@ -1,6 +1,12 @@
 import torch
 from lightning import LightningModule
-from transformers import AutoConfig, AutoModel, MBartConfig, MBartForCausalLM, VisionEncoderDecoderModel
+from transformers import (
+    AutoConfig,
+    AutoModel,
+    MBartConfig,
+    MBartForCausalLM,
+    VisionEncoderDecoderModel,
+)
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
@@ -95,8 +101,7 @@ class FormulaNetLit(LightningModule):
     
     def model_step(self, batch, batch_idx):
         outputs = self.forward(**batch)
-        loss = outputs.loss.mean()
-        return loss
+        return outputs.loss
     
     def training_step(self, batch, batch_idx):
         loss = self.model_step(batch, batch_idx)
