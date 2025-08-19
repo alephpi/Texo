@@ -80,7 +80,7 @@ class HGNetFormulaHF(PreTrainedModel):
         self.projection = nn.Linear(backbone_output_dim, config.hidden_size)
 
         if config.pretrained_backbone:
-            print(f"load {pretrained_backbone=}")
+            print(f"load pretrained backbone from {config.pretrained_backbone}")
             backbone_state_dict = torch.load(config.pretrained_backbone)
             self.backbone.load_state_dict(backbone_state_dict)
 
