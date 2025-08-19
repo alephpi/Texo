@@ -10,6 +10,7 @@ model:
       stage4: [1024, 384, 2048, 1, true, true, 5, 6]
     hidden_size: 384
     pretrained_backbone: ./src/syntex/formula_net/formulanet_encoder_hgnetv2.pt
+    freeze_backbone: True
   decoder:
     vocab_size: 687
     max_position_embeddings: 1024

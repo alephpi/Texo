@@ -56,8 +56,8 @@ class HGNetFormulaConfig(PretrainedConfig):
         stem_channels,
         stage_config,
         hidden_size,
-        pretrained_backbone=None,
-        freeze_backbone=True,
+        pretrained_backbone,
+        freeze_backbone,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -80,10 +80,12 @@ class HGNetFormulaHF(PreTrainedModel):
         self.projection = nn.Linear(backbone_output_dim, config.hidden_size)
 
         if config.pretrained_backbone:
+            print(f"load {pretrained_backbone=}")
             backbone_state_dict = torch.load(config.pretrained_backbone)
             self.backbone.load_state_dict(backbone_state_dict)
 
             if config.freeze_backbone:
+                print("freeze backbone weight")
                 self._freeze_norm(self.backbone)
                 self._freeze_parameters(self.backbone)
 
