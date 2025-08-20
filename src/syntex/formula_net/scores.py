@@ -1,7 +1,7 @@
 import evaluate
 from rapidfuzz.distance import Levenshtein
 
-bleu = evaluate.load("bleu", keep_in_memory=True)
+bleu = evaluate.load("bleu", keep_in_memory=False)
 
 def compute_bleu(pred_str: list[str], ref_str: list[str]):
     """compute bleu score of two lists of strings, notice that the max order is 4, so any ref_str less than 4 words would have 0 bleu score."""
