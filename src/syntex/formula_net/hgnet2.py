@@ -126,7 +126,7 @@ class HG_Block(nn.Module):
         x = self.aggregation_excitation_conv(x)
         if self.residual:
             # x = self.drop_path(x) + identity
-            x += identity
+            x = x + identity
         return x
 
 
