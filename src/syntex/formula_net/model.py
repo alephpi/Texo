@@ -56,7 +56,7 @@ class FormulaNetLit(LightningModule):
     def training_step(self, batch, batch_idx):
         outputs = self.model_step(batch, batch_idx)
         loss = outputs.loss
-        self.log("train_loss", loss, on_step=True, logger=True)
+        self.log("train_loss", loss, on_step=True, on_epoch=False, logger=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
