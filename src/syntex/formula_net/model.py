@@ -74,9 +74,9 @@ class FormulaNetLit(LightningModule):
         edit_distance = compute_edit_distance(pred_str, ref_str)
 
         # log metrics
-        self.log("val_loss", loss, on_step=True, on_epoch=False, logger=True)
-        self.log("BLEU", bleu, on_step=True, on_epoch=False, logger=True)
-        self.log("edit_distance", edit_distance, on_step=True, on_epoch=False, logger=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
+        self.log("BLEU", bleu, on_step=False, on_epoch=True, logger=True)
+        self.log("edit_distance", edit_distance, on_step=False, on_epoch=True, logger=True)
 
         return
 
