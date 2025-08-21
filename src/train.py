@@ -30,10 +30,10 @@ def main(cfg: DictConfig):
         val_check_interval=1000,
         callbacks=[
             ModelCheckpoint(
-                filename = "{step}-{train_loss:.4f}-{BLEU:.4f}-{edit_distance:.4f}",
+                filename = "{step}-{val_loss:.4f}-{BLEU:.4f}-{edit_distance:.4f}",
                 save_top_k=-1,
                 save_last=True,
-                monitor="train_loss",
+                monitor="val_loss",
                 every_n_train_steps=1000,
             ),
             LearningRateMonitor("step"),
