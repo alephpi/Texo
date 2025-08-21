@@ -1,4 +1,9 @@
 output_dir: ${hydra:runtime.output_dir}
+hydra:
+  run:
+    dir: outputs/${hydra.job.name}
+  job:
+    name: bs=${data.batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
 model:
   tokenizer_path: ./data/tokenizer
   encoder:
@@ -10,7 +15,7 @@ model:
       stage4: [1024, 384, 2048, 1, true, true, 5, 6]
     hidden_size: 384
     pretrained_backbone: ./src/syntex/formula_net/formulanet_encoder_hgnetv2.pt
-    freeze_backbone: True
+    freeze_backbone: true
   decoder:
     vocab_size: 687
     max_position_embeddings: 1024
@@ -35,6 +40,7 @@ training:
     lr: 1e-4
     betas: [0.9, 0.999]
     weight_decay: 0.05
+  resume_from_ckpt: null
 
 data:
   train_image_dir: ./data/dataset/UniMER-1M_merged/images

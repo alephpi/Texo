@@ -31,9 +31,10 @@ def main(cfg: DictConfig):
         callbacks=[
             ModelCheckpoint(
                 filename = "{step}-{val_loss:.4f}-{BLEU:.4f}-{edit_distance:.4f}",
-                save_top_k=-1,
+                save_top_k=10,
                 save_last=True,
                 monitor="val_loss",
+                mode="min",
                 every_n_train_steps=1000,
             ),
             LearningRateMonitor("step"),
@@ -43,7 +44,7 @@ def main(cfg: DictConfig):
             )
     )
 
-    trainer.fit(model, datamodule=datamodule)
+    trainer.fit(model, datamodule=datamodule, ckpt_path=cfg.training.resume_from_ckpt)
 
 if __name__ == "__main__":
     main()
