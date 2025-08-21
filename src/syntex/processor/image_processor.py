@@ -113,7 +113,7 @@ class TrainMERImageProcessor(BaseMERImageProcessor):
     def process(self, image: Image.Image):
         assert isinstance(image, Image.Image), "image must be a PIL.Image.Image"
 
-        image_ = preprocess(image, self.image_size, random_padding=True)
+        image_ = preprocess(image, self.image_size, random_padding=False) # random_padding is disabled even for training in ppformulanet, see https://github.com/PaddlePaddle/PaddleOCR/blob/4a6635f8ff85a7d8b225f573a7d2b53e749480d5/ppocr/data/imaug/unimernet_aug.py#L570
         image_ = np.array(image_)
 
         return self.transform(image=image_)['image']
