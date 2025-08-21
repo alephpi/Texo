@@ -38,11 +38,10 @@ class FormulaNetLit(LightningModule):
         self.scheduler = get_cosine_with_min_lr_schedule_with_warmup(self.optimizer, **self.training_config["lr_scheduler"])
         self.tokenizer: PreTrainedTokenizerFast = PreTrainedTokenizerFast.from_pretrained(self.model_config["tokenizer_path"])
 
-    def forward(self, pixel_values, labels, attention_mask):
+    def forward(self, pixel_values, labels, **kwargs):
         outputs =  self.model.forward(
             pixel_values=pixel_values, 
             labels=labels,
-            decoder_attention_mask=attention_mask,
             return_dict=True,
             output_attentions=False,
             output_hidden_states=False

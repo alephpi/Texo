@@ -13,7 +13,6 @@ from ..processor import (
     TextProcessor,
     TrainMERImageProcessor,
 )
-from ..processor.text_processor import text_processor_default_config
 
 
 class MERDataset(Dataset):
@@ -60,35 +59,12 @@ class MERDataset(Dataset):
         images = torch.stack([item["pixel_values"] for item in batch])
 
         # batch-process text in collate_fn
-        text_encoding = self.text_processor(texts)
-        # we remove the bos token `<s>` to construct the labels
-        # since the transformers.decoder will automatically shift it to the right as the decoder_input_ids
-        labels = text_encoding["input_ids"][:, 1:]
-        # set padding token to -100(default padding value in transformers) for loss calculation
+        labels = self.text_processor(texts).input_ids
         labels[labels == self.text_processor.tokenizer.pad_token_id] = -100
-        attention_mask = text_encoding["attention_mask"][:, 1:]
         return {
             "pixel_values": images,
             "labels": labels,
-            "attention_mask": attention_mask
         }
-
-DATA_CONFIG = {
-    "train_image_dir": "./data/dataset/UniMER-1M_merged/images",
-    "train_text_path": "./data/dataset/UniMER-1M_merged/train_normalized_.txt",
-    "eval_image_dir": "./data/dataset/UniMER-Test/cpe",
-    "eval_text_path": "./data/dataset/UniMER-Test/cpe.txt",
-    "image_processor":{
-        "image_size": {
-            "width": 384,
-            "height": 384,
-        }
-    },
-    "text_processor": text_processor_default_config,
-    "batch_size": 8,
-    "num_workers": 10,
-    
-}
 
 class MERDataModule(LightningDataModule):
     def __init__(self, data_config: dict):

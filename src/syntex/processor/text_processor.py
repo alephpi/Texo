@@ -8,7 +8,7 @@ text_processor_default_config = {
         "padding": "longest",
         "truncation": True,
         "return_tensors": "pt",
-        "return_attention_mask": True,
+        "return_attention_mask": False,
     }
 }
 
