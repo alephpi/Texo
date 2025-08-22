@@ -39,7 +39,7 @@ class FormulaNetLit(LightningModule):
         self.tokenizer: PreTrainedTokenizerFast = PreTrainedTokenizerFast.from_pretrained(self.model_config["tokenizer_path"])
 
     def forward(self, pixel_values, labels, **kwargs):
-        outputs =  self.model.forward(
+        outputs =  self.model(
             pixel_values=pixel_values, 
             labels=labels,
             return_dict=True,

@@ -202,3 +202,10 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
     (layer 1) 2.37
   (lm_head) 19.20 (50000*384)
 ```
+
+现在的问题是，把 vocab_size 缩小到 687 以后，只有 6M 大小的 decoder 在没有预训练权重的初始化下，CE loss 降到 1.5 就几乎不动了。这其中有几种可能：
+1. 首要的原因是从头训练小模型非常难以优化，因为冗余参数变少了，导致在优化空间中更难找到一条容易的路径前往极值点。PPformulanet 是从大 decoder（hidden dim=1024）插值而来，具体从谁的 decoder 插值？（猜测是 UniMERNet），怎么插值？文章中都没有详说。
+2. 是否可以加上 label_smoothing？用 transformers 自带的 loss 计算的话，label smoothing 为 0（建议为 0.1）
+3. 是否可以考虑用 Muon 优化器？其效率比 Adam 更高。
+4. 考虑增大 decoder 的宽度和层数。对于 UniMERNet 而言，其宽度至少为 512，其层数至少为 24（4*6）。
+5. 还有一个粗暴的方法是，比较 MBart tokenizer 和我们的 tokenizer 的区别，把 MBart 中的无用 token 完全删去，然后用 ppformulanet 的 decoder 中的相关权重给我们的 decoder 初始化。
