@@ -209,3 +209,5 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 3. 是否可以考虑用 Muon 优化器？其效率比 Adam 更高。
 4. 考虑增大 decoder 的宽度和层数。对于 UniMERNet 而言，其宽度至少为 512，其层数至少为 24（4*6）。
 5. 还有一个粗暴的方法是，比较 MBart tokenizer 和我们的 tokenizer 的区别，把 MBart 中的无用 token 完全删去，然后用 ppformulanet 的 decoder 中的相关权重给我们的 decoder 初始化。
+
+破案了，是 transformers 的 bug https://github.com/huggingface/transformers/issues/40111
