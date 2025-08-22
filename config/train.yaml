@@ -3,7 +3,7 @@ hydra:
   run:
     dir: outputs/${hydra.job.name}
   job:
-    name: bs=${data.batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
+    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
 model:
   tokenizer_path: ./data/tokenizer
   encoder:
@@ -19,7 +19,7 @@ model:
   decoder:
     vocab_size: 687
     max_position_embeddings: 1024
-    d_model: 384
+    d_model: ${model.encoder.hidden_size}
     decoder_layers: 2
     decoder_attention_heads: 16
     decoder_ffn_dim: 1536
