@@ -211,3 +211,4 @@ outputs
 data/dataset/**/*
 !data/dataset/.gitkeep
 !data/dataset/**/*.py
+**log**
