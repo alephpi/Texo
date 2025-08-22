@@ -97,6 +97,7 @@ class MERDataModule(LightningDataModule):
                             shuffle=True,
                             num_workers=self.data_config["num_workers"],
                             collate_fn=self.train_dataset.collate_fn,
+                            pin_memory=True,
                             persistent_workers=True
                             )
         return train_loader
@@ -108,6 +109,7 @@ class MERDataModule(LightningDataModule):
                             shuffle=False,
                             num_workers=self.data_config["num_workers"],
                             collate_fn=self.val_dataset.collate_fn,
+                            pin_memory=True,
                             persistent_workers=True
                             )
         return val_loader
