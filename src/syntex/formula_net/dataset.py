@@ -76,13 +76,6 @@ class MERDataModule(LightningDataModule):
         self.test_dataset: Optional[MERDataset] = None
     
     def setup(self, stage=None):
-        if self.trainer is not None:
-            if self.data_config["batch_size"] % self.trainer.world_size != 0:
-                raise RuntimeError(
-                    f'Batch size ({self.data_config["batch_size"]}) is not divisible by the number of devices ({self.trainer.world_size}).'
-                )
-            self.batch_size_per_device = self.data_config["batch_size"] // self.trainer.world_size
-
         self.train_dataset = MERDataset(
                                 image_dir=self.data_config["train_image_dir"],
                                 text_path=self.data_config["train_text_path"],
@@ -100,19 +93,21 @@ class MERDataModule(LightningDataModule):
     def train_dataloader(self):
         train_loader = DataLoader(
                             dataset=self.train_dataset,
-                            batch_size=self.data_config["batch_size"],
+                            batch_size=self.data_config["train_batch_size"],
                             shuffle=True,
                             num_workers=self.data_config["num_workers"],
-                            collate_fn=self.train_dataset.collate_fn
+                            collate_fn=self.train_dataset.collate_fn,
+                            persistent_workers=True
                             )
         return train_loader
     
     def val_dataloader(self):
         val_loader = DataLoader(
                             dataset=self.val_dataset,
-                            batch_size=self.data_config["batch_size"],
+                            batch_size=self.data_config["val_batch_size"],
                             shuffle=False,
                             num_workers=self.data_config["num_workers"],
-                            collate_fn=self.val_dataset.collate_fn
+                            collate_fn=self.val_dataset.collate_fn,
+                            persistent_workers=True
                             )
         return val_loader
