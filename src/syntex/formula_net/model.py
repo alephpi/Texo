@@ -47,7 +47,11 @@ class FormulaNetLit(LightningModule):
             output_hidden_states=False
             )
         return outputs
-    
+
+    def generate(self, pixel_values, **kwargs):
+        outputs = self.model.generate(pixel_values, **kwargs)
+        return outputs
+
     def model_step(self, batch, batch_idx):
         outputs = self.forward(**batch)
         return outputs
@@ -62,20 +66,28 @@ class FormulaNetLit(LightningModule):
         outputs = self.model_step(batch, batch_idx)
         loss = outputs.loss
 
-        preds = torch.argmax(outputs.logits, dim=-1)  # greedy decode
-
-        pred_str = self.tokenizer.batch_decode(preds, skip_special_tokens=True)
         labels = batch["labels"]
         labels[labels == -100] = self.model.config.pad_token_id
         ref_str = self.tokenizer.batch_decode(batch["labels"], skip_special_tokens=True)
 
+        max_length = labels.shape[-1] # in validation, since we know how long the ground truth is, we truncate to it to save computation.
+
+        outputs = self.generate(batch["pixel_values"], num_beams=1, do_sample=False, max_length=max_length)
+        pred_str = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         bleu = compute_bleu(pred_str, ref_str)
         edit_distance = compute_edit_distance(pred_str, ref_str)
+
+        outputs_beam_search = self.generate(batch["pixel_values"], num_beams=4, do_sample=False, max_length=max_length)
+        pred_str_beam_search = self.tokenizer.batch_decode(outputs_beam_search, skip_special_tokens=True)
+        bleu_beam_search = compute_bleu(pred_str_beam_search, ref_str)
+        edit_distance_beam_search = compute_edit_distance(pred_str_beam_search, ref_str)
 
         # log metrics
         self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
         self.log("BLEU", bleu, on_step=False, on_epoch=True, logger=True)
         self.log("edit_distance", edit_distance, on_step=False, on_epoch=True, logger=True)
+        self.log("BLEU_beam_search", bleu_beam_search, on_step=False, on_epoch=True, logger=True)
+        self.log("edit_distance_beam_search", edit_distance_beam_search, on_step=False, on_epoch=True, logger=True)
 
         return
 
