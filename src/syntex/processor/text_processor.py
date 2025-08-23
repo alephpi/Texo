@@ -1,7 +1,7 @@
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
 text_processor_default_config = {
-    "tokenizer_path": "../data/tokenizer",
+    "tokenizer_path": "data/tokenizer",
     "tokenizer_config":{
         "add_special_tokens": True,
         "max_length": 1024,
@@ -13,10 +13,10 @@ text_processor_default_config = {
 }
 
 class TextProcessor:
-    def __init__(self, config):
+    def __init__(self, config=text_processor_default_config):
         self.tokenizer: PreTrainedTokenizerFast = \
-         PreTrainedTokenizerFast.from_pretrained(config.tokenizer_path)
-        self.tokenizer_config = config.tokenizer_config
+         PreTrainedTokenizerFast.from_pretrained(config["tokenizer_path"])
+        self.tokenizer_config = config["tokenizer_config"]
 
         # 确保tokenizer有pad_token，如果没有则使用eos_token
         assert self.tokenizer.pad_token is not None, "Tokenizer must have the pad_token"

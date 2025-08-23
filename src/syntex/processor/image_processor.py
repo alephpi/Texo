@@ -21,7 +21,7 @@ def resize(image: Image.Image, image_size: Dict[str, int], random_padding = Fals
     """
     output_size = (image_size["height"], image_size["width"])
 
-    image = F.resize(image, min(output_size))
+    image = F.resize(image, min(output_size)) # type: ignore
     image.thumbnail((output_size[1], output_size[0]))
     delta_height = output_size[0] - image.height
     delta_width = output_size[1] - image.width
@@ -95,7 +95,7 @@ class TrainMERImageProcessor(BaseMERImageProcessor):
                         Bitmap(p=0.05),
                         alb.OneOf([Fog(), Frost(), Rain(), Shadow()], p=0.2),
                         alb.OneOf([Erosion((2, 3)), Dilation((2, 3))], p=0.2),
-                        alb.Affine(scale=(0.85, 1.0), rotate=(-1, 1), interpolation=3, border_mode=0, fill=[255, 255, 255], p=1),
+                        alb.Affine(scale=(0.85, 1.0), rotate=(-1, 1), interpolation=3, border_mode=0, fill=(255.0, 255.0, 255.0), p=1),
                         alb.GridDistortion(distort_limit=0.1, interpolation=3, p=.5)],
                     p=.15),
                 # alb.InvertImg(p=.4), #NOTE no InvertImg in UniMERNet
