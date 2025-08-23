@@ -68,7 +68,10 @@ class MERDataset(Dataset):
         res = self.text_processor(texts)
         input_ids = res["input_ids"]
         attention_mask = res["attention_mask"]
-        labels = torch.nn.functional.pad(input_ids[:, 1:], (0, 1), value=self.pad_token_id)
+        # NOTE Unlike many seq2seq models tutorials, we don't apply token shift for labels
+        # i.e. we keep the first token as the start token, since MBart decoder compute loss without token shift, see https://github.com/huggingface/transformers/issues/10480
+        # also by careful debugging, we found the output.logits of MBartForCausalLM is aligned with the decoder_input_ids, not the shifted label
+        labels = input_ids.clone()
         labels[labels == self.pad_token_id] = -100
         return {
             "pixel_values": images,

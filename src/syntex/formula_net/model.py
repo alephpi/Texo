@@ -40,16 +40,23 @@ class FormulaNetLit(LightningModule):
         self.loss_fct = torch.nn.CrossEntropyLoss()
 
     def forward(self, pixel_values, decoder_input_ids, decoder_attention_mask, labels, **kwargs):
+        # here we don't do token shift for labels, since the MBartForCausalLM behavior is different from RobertaForCausalLM or GPT2LMHeadModel
+        # that's why we don't simply input labels to the forward function as many of the HF tutorials do, 
+        # since the VisionEncoderDecoderModel assumes the decoder's behavior is RobertaForCausalLM-like,
+        # and cannot handle the sophistication here.
+        # Man what can I say, if UniMERNet/ppFormulaNet didn't use it, I wouldn't touch it at all.
+        # BTW we have another token-shift bug for VisionEncoderDecoderModel in >4.49,
+        # both of them cost me one day...
         outputs =  self.model(
             pixel_values=pixel_values, 
             decoder_input_ids=decoder_input_ids,
             decoder_attention_mask=decoder_attention_mask,
+            labels=labels,
             return_dict=True,
             output_attentions=False,
             output_hidden_states=False
             )
-        loss = self.loss_fct(outputs.logits[:, 1:].reshape(-1, self.model.decoder.config.vocab_size), labels[:, :-1].reshape(-1))
-        return loss
+        return outputs.loss
 
     def generate(self, pixel_values, **kwargs):
         outputs = self.model.generate(pixel_values, **kwargs)
