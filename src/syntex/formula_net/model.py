@@ -37,36 +37,35 @@ class FormulaNetLit(LightningModule):
         self.optimizer = torch.optim.AdamW(self.model.parameters(), **self.training_config["optimizer"])
         self.scheduler = get_cosine_with_min_lr_schedule_with_warmup(self.optimizer, **self.training_config["lr_scheduler"])
         self.tokenizer: PreTrainedTokenizerFast = PreTrainedTokenizerFast.from_pretrained(self.model_config["tokenizer_path"])
+        self.loss_fct = torch.nn.CrossEntropyLoss()
 
-    def forward(self, pixel_values, labels, **kwargs):
+    def forward(self, pixel_values, decoder_input_ids, decoder_attention_mask, labels, **kwargs):
         outputs =  self.model(
             pixel_values=pixel_values, 
-            labels=labels,
+            decoder_input_ids=decoder_input_ids,
+            decoder_attention_mask=decoder_attention_mask,
             return_dict=True,
             output_attentions=False,
             output_hidden_states=False
             )
-        return outputs
+        loss = self.loss_fct(outputs.logits[:, 1:].reshape(-1, self.model.decoder.config.vocab_size), labels[:, :-1].reshape(-1))
+        return loss
 
     def generate(self, pixel_values, **kwargs):
         outputs = self.model.generate(pixel_values, **kwargs)
         return outputs
-    
-
 
     def model_step(self, batch, batch_idx):
         outputs = self.forward(**batch)
         return outputs
     
     def training_step(self, batch, batch_idx):
-        outputs = self.model_step(batch, batch_idx)
-        loss = outputs.loss
+        loss = self.model_step(batch, batch_idx)
         self.log("train_loss", loss, on_step=True, on_epoch=False, logger=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
-        outputs = self.model_step(batch, batch_idx)
-        loss = outputs.loss
+        loss = self.model_step(batch, batch_idx)
         self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
 
         # labels = batch["labels"]
@@ -121,7 +120,7 @@ if __name__ == '__main__':
                 },
             "hidden_size": 384,
             "pretrained_backbone": "./src/syntex/formula_net/formulanet_encoder_hgnetv2.pt",
-            "freeeze_backbone": True,
+            "freeze_backbone": True,
         },
         "decoder": {
             "vocab_size": tokenizer.vocab_size,

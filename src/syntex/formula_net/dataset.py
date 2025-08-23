@@ -29,12 +29,18 @@ class MERDataset(Dataset):
         # 验证图像文件是否存在
         self.padding_digits = 7 # for UniMER-1M
         self.valid_indices = []
+        # self.text_length = [] # store the token numbers of each text label for bucketing
         for idx in range(len(self.texts)):
             img_path = Path(image_dir) / f"{idx:0{self.padding_digits}d}.png"
             if os.path.exists(img_path):
                 self.valid_indices.append(idx)
             else:
-                print(f"{img_path=} does not exist.")
+                ...
+                # print(f"{img_path=} does not exist.")
+            
+            # text = self.texts[idx]
+            # length = len(text.split(' '))
+        self.pad_token_id = self.text_processor.tokenizer.pad_token_id
 
     def __len__(self) -> int:
         return len(self.valid_indices)
@@ -59,10 +65,15 @@ class MERDataset(Dataset):
         images = torch.stack([item["pixel_values"] for item in batch])
 
         # batch-process text in collate_fn
-        labels = self.text_processor(texts).input_ids
-        labels[labels == self.text_processor.tokenizer.pad_token_id] = -100
+        res = self.text_processor(texts)
+        input_ids = res["input_ids"]
+        attention_mask = res["attention_mask"]
+        labels = torch.nn.functional.pad(input_ids[:, 1:], (0, 1), value=self.pad_token_id)
+        labels[labels == self.pad_token_id] = -100
         return {
             "pixel_values": images,
+            "decoder_input_ids": input_ids,
+            "decoder_attention_mask": attention_mask,
             "labels": labels,
         }
 
