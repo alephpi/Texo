@@ -34,7 +34,7 @@ def main(cfg: DictConfig):
         val_check_interval=1000,
         callbacks=[
             ModelCheckpoint(
-                filename = "{step}-{val_loss:.4f}-{BLEU:.4f}-{edit_distance:.4f}",
+                filename = "{step}-{val_loss:.4e}-{BLEU:.4f}-{edit_distance:.4f}",
                 save_top_k=10,
                 save_last=True,
                 monitor="val_loss",
