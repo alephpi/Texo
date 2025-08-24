@@ -20,13 +20,17 @@ def main(cfg: DictConfig):
 
     model = FormulaNetLit(cfg.model, cfg.training)
 
+    precision = "bf16" if torch.cuda.is_bf16_supported() else "16"
+
     trainer = L.Trainer(
         default_root_dir=cfg.output_dir,
         accelerator="auto",
         devices="auto",
-        precision="16-mixed",
+        precision=precision, # type: ignore
+        # limit_train_batches=2, # for debugging
+        # limit_val_batches=2, # for debugging
         log_every_n_steps=50,
-        max_steps=cfg.training.max_steps,
+        max_epochs=cfg.training.max_epochs,
         val_check_interval=1000,
         callbacks=[
             ModelCheckpoint(
@@ -35,7 +39,7 @@ def main(cfg: DictConfig):
                 save_last=True,
                 monitor="val_loss",
                 mode="min",
-                every_n_train_steps=1000,
+                every_n_epochs=1,
             ),
             LearningRateMonitor("step"),
         ],

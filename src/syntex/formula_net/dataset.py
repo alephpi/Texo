@@ -85,10 +85,7 @@ class MERDataModule(LightningDataModule):
         super().__init__()
         self.data_config = data_config
         self.save_hyperparameters()
-        self.train_dataset: Optional[MERDataset] = None
-        self.val_dataset: Optional[MERDataset] = None
-        self.test_dataset: Optional[MERDataset] = None
-    
+
     def setup(self, stage=None):
         self.train_dataset = MERDataset(
                                 image_dir=self.data_config["train_image_dir"],
@@ -103,7 +100,14 @@ class MERDataModule(LightningDataModule):
                                 image_processor=EvalMERImageProcessor(**self.data_config["image_processor"]),
                                 text_processor=TextProcessor(self.data_config["text_processor"])
                                 )
-    
+
+        self.test_dataset = MERDataset(
+                                image_dir=self.data_config["test_image_dir"],
+                                text_path=self.data_config["test_text_path"],
+                                image_processor=EvalMERImageProcessor(**self.data_config["image_processor"]),
+                                text_processor=TextProcessor(self.data_config["text_processor"])
+                                )
+         
     def train_dataloader(self):
         train_loader = DataLoader(
                             dataset=self.train_dataset,
@@ -127,3 +131,15 @@ class MERDataModule(LightningDataModule):
                             persistent_workers=True
                             )
         return val_loader
+    
+    def test_dataloader(self):
+        test_loader = DataLoader(
+                            dataset=self.test_dataset,
+                            batch_size=self.data_config["test_batch_size"],
+                            shuffle=False,
+                            num_workers=self.data_config["num_workers"],
+                            collate_fn=self.val_dataset.collate_fn,
+                            pin_memory=True,
+                            persistent_workers=True
+                            )
+        return test_loader

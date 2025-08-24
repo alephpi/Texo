@@ -31,13 +31,13 @@ model:
     is_decoder: true
 
 training:
-  max_steps: 3e5
+  max_epochs: 10
   lr_scheduler:
     min_lr: 1e-8
     num_training_steps: 3e5
     num_warmup_steps: 5e3
   optimizer:
-    lr: 2e-4
+    lr: 5e-5
     betas: [0.9, 0.999]
     weight_decay: 0.05
   resume_from_ckpt: null
@@ -47,6 +47,8 @@ data:
   train_text_path: ./data/dataset/UniMER-1M_merged/train_normalized_.txt
   eval_image_dir: ./data/dataset/UniMER-Test/cpe
   eval_text_path: ./data/dataset/UniMER-Test/cpe.txt
+  test_image_dir: ${data.eval_image_dir}
+  test_text_path: ${data.eval_text_path}
   image_processor:
     image_size:
       width: 384
@@ -60,6 +62,7 @@ data:
       truncation: true
       return_tensors: pt
       return_attention_mask: true
-  train_batch_size: 128
-  val_batch_size: 128
+  train_batch_size: 64
+  val_batch_size: 64
+  test_batch_size: 8
   num_workers: 10
