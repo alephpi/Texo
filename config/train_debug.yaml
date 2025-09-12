@@ -14,4 +14,4 @@ data:
   val_batch_size: 2
 
 trainer:
-  fast_dev_run: 2
+  fast_dev_run: 30

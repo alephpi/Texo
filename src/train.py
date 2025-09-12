@@ -21,7 +21,17 @@ def main(cfg: DictConfig):
     datamodule = MERDataModule(data_config=cfg.data)
     logging.log(logging.INFO, f"Dataset initialized.")
 
-    trainer = hydra.utils.instantiate(cfg.trainer)
+    if cfg.trainer.profiler:
+        from lightning.pytorch.profilers import PyTorchProfiler
+        profiler = PyTorchProfiler(
+            dirpath=cfg.trainer.logger.save_dir,
+            filename="profile",
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(cfg.trainer.logger.save_dir+"/tb_logs"),
+            schedule=torch.profiler.schedule(skip_first=10, wait=2, warmup=2, active=50, repeat=10),
+            )
+    else:
+        profiler = None
+    trainer = hydra.utils.instantiate(cfg.trainer, profiler=profiler)
     logging.log(logging.INFO, f"Trainer initialized.")
 
     if cfg.training.resume_from_ckpt:

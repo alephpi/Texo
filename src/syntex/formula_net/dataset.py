@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from lightning import LightningDataModule
 from PIL import Image
-from torch.utils.data import DataLoader, Dataset, RandomSampler
+from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 
 from ..processor import (
     BaseMERImageProcessor,
@@ -92,7 +92,7 @@ class MERDataModule(LightningDataModule):
         super().__init__()
         self.data_config = data_config
         self.save_hyperparameters()
-        self.sampler = RandomSampler # other options: SequentialSampler, SortedSampler
+        self.sampler = SequentialSampler # options: SequentialSampler, SortedSampler, RandomSampler
 
     def setup(self, stage=None):
         self.train_dataset = MERDataset(
@@ -117,14 +117,24 @@ class MERDataModule(LightningDataModule):
                                 )
          
     def train_dataloader(self):
+        # train_loader = DataLoader(
+        #                     dataset=self.train_dataset,
+        #                     batch_sampler=BucketBatchSampler(
+        #                         sampler=self.sampler(data_source=self.train_dataset),
+        #                         batch_size=self.data_config["train_batch_size"],
+        #                         drop_last=True,
+        #                         sort_key=lambda idx: self.train_dataset[idx]["length"]
+        #                     ),
+        #                     num_workers=self.data_config["num_workers"],
+        #                     collate_fn=self.train_dataset.collate_fn,
+        #                     pin_memory=True,
+        #                     persistent_workers=True
+        #                     )
         train_loader = DataLoader(
                             dataset=self.train_dataset,
-                            batch_sampler=BucketBatchSampler(
-                                sampler=self.sampler(data_source=self.train_dataset),
-                                batch_size=self.data_config["train_batch_size"],
-                                drop_last=True,
-                                sort_key=lambda idx: self.train_dataset[idx]["length"]
-                            ),
+                            batch_size=self.data_config["train_batch_size"],
+                            shuffle=True,
+                            drop_last=True,
                             num_workers=self.data_config["num_workers"],
                             collate_fn=self.train_dataset.collate_fn,
                             pin_memory=True,

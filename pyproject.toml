@@ -26,8 +26,12 @@ dependencies = [
 [dependency-groups]
 dev = [
     "jupyterlab>=4.4.5",
+    "orjson>=3.11.3",
     "pytest>=8.4.1",
+    "tensorboard-plugin-profile>=2.20.6",
+    "torch-tb-profiler>=0.4.3",
     "torchinfo>=1.8.0",
+    "viztracer>=1.0.4",
 ]
 
 [tool.uv.pip]

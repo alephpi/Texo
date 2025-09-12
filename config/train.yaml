@@ -1,9 +1,11 @@
 output_dir: ${hydra:runtime.output_dir}
+
 hydra:
   run:
     dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
   job:
     name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
+
 model:
   tokenizer_path: ./data/tokenizer
   encoder:
@@ -77,8 +79,8 @@ trainer:
   log_every_n_steps: 50
   max_epochs: 10
   val_check_interval: 1000
-  
-  # 回调函数配置
+  profiler: null
+
   callbacks:
     - _target_: lightning.pytorch.callbacks.ModelCheckpoint
       filename: "{step}-{val_loss:.4e}-{BLEU:.4f}-{edit_distance:.4f}"
@@ -91,13 +93,12 @@ trainer:
     - _target_: lightning.pytorch.callbacks.RichModelSummary
       max_depth: 3
 
-    - _target_: lightning.pytorch.callbacks.RichProgressBar
-      refresh_rate: 5
+    # - _target_: lightning.pytorch.callbacks.RichProgressBar
+    #   refresh_rate: 5
 
     - _target_: lightning.pytorch.callbacks.LearningRateMonitor
       logging_interval: "step"
 
-  # 日志配置
   logger:
     _target_: lightning.pytorch.loggers.TensorBoardLogger
     save_dir: ${output_dir}
