@@ -1,6 +1,5 @@
 import torch
 from lightning import LightningModule
-from tqdm import tqdm
 from transformers import (
     AutoConfig,
     AutoModel,
@@ -74,41 +73,24 @@ class FormulaNetLit(LightningModule):
     def validation_step(self, batch, batch_idx):
         loss = self.model_step(batch, batch_idx)
         self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
-    
-    def evaluation_step(self, pixel_values, labels):
+
+        if self.trainer.fit_loop.epoch_loop.done:
+            self.score_step(batch, batch_idx)
+
+    def score_step(self, batch, batch_idx):
+        labels = batch["labels"]
         labels[labels == -100] = self.model.config.pad_token_id
         ref_str = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
 
         max_length = labels.shape[-1] # in validation, since we know how long the ground truth is, we truncate to it to save computation.
 
-        outputs = self.generate(pixel_values, num_beams=1, do_sample=False, max_length=max_length)
+        outputs = self.generate(batch["pixel_values"], num_beams=1, do_sample=False, max_length=max_length)
         pred_str = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         bleu = compute_bleu(pred_str, ref_str)
         edit_distance = compute_edit_distance(pred_str, ref_str)
 
-        return bleu, edit_distance
-
-    def on_train_epoch_end(self):
-        bleu = 0
-        edit_distance = 0
-        total_batches = 0
-        eval_dl = self.trainer.datamodule.test_dataloader()
-        for batch in tqdm(eval_dl, desc="Evaluation"):
-            pixel_values, labels = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
-            bleu_, edit_distance_ = self.evaluation_step(pixel_values, labels)
-            bleu += bleu_
-            edit_distance += edit_distance_
-            total_batches += 1
-            if total_batches == 2:
-                break
-        
-        metrics = {"bleu": bleu/total_batches, "edit_distance": edit_distance/total_batches}
-        # print(metrics)
-        step = self.trainer.global_step
-        for logger in self.trainer.loggers:
-            logger.log_metrics(metrics, step=step)
-        # put into callback_metrics for easy access
-        self.trainer.callback_metrics.update(metrics)
+        self.log("BLEU", bleu, on_step=False, on_epoch=True, logger=True)
+        self.log("edit_distance", edit_distance, on_step=False, on_epoch=True, logger=True)
         return
 
     def configure_optimizers(self):

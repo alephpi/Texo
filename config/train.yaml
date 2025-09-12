@@ -90,6 +90,9 @@ trainer:
     - _target_: lightning.pytorch.callbacks.RichModelSummary
       max_depth: 3
 
+    - _target_: lightning.pytorch.callbacks.RichProgressBar
+      refresh_rate: 5
+
     - _target_: lightning.pytorch.callbacks.LearningRateMonitor
       logging_interval: "step"
 
