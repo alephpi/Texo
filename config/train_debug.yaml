@@ -1,0 +1,17 @@
+defaults:
+  - train
+  - _self_
+
+data:
+  train_image_dir: ./data/dataset/simple/images
+  train_text_path: ./data/dataset/simple/train.txt
+  eval_image_dir: ${data.train_image_dir}
+  eval_text_path: ${data.train_text_path}
+  test_image_dir: ${data.eval_image_dir}
+  test_text_path: ${data.eval_text_path}
+
+  train_batch_size: 2
+  val_batch_size: 2
+
+trainer:
+  fast_dev_run: 2
