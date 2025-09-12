@@ -1,3 +1,4 @@
+import logging
 import hydra
 import lightning as L
 import torch
@@ -16,11 +17,13 @@ def main(cfg: DictConfig):
     
     torch.set_float32_matmul_precision("medium")
 
-    datamodule = MERDataModule(data_config=cfg.data)
-
     model = FormulaNetLit(cfg.model, cfg.training)
+    logging.log(logging.INFO, f"Model initialized.")
 
-    precision = "bf16" if torch.cuda.is_bf16_supported() else "16"
+    datamodule = MERDataModule(data_config=cfg.data)
+    logging.log(logging.INFO, f"dataset initialized.")
+
+    precision = "bf16-mixed" if torch.cuda.is_bf16_supported() else "16"
 
     trainer = L.Trainer(
         default_root_dir=cfg.output_dir,
@@ -44,11 +47,23 @@ def main(cfg: DictConfig):
             LearningRateMonitor("step"),
         ],
         logger=TensorBoardLogger(
-            save_dir=cfg.output_dir
+            save_dir=cfg.output_dir,
+            name="",
+            version="",
+            sub_dir="tb_logs"
             )
     )
 
+    if cfg.training.resume_from_ckpt:
+        logging.log(logging.INFO, f"Resuming from checkpoint: {cfg.training.resume_from_ckpt}")
     trainer.fit(model, datamodule=datamodule, ckpt_path=cfg.training.resume_from_ckpt)
 
 if __name__ == "__main__":
+    # import debugpy
+    # try:
+    #     debugpy.listen(('localhost', 9501))
+    #     print('Waiting for debugger attach')
+    #     debugpy.wait_for_client()
+    # except Exception as e:
+    #     pass
     main()

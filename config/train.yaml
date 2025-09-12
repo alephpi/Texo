@@ -1,7 +1,7 @@
 output_dir: ${hydra:runtime.output_dir}
 hydra:
   run:
-    dir: outputs/${hydra.job.name}
+    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
   job:
     name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
 model:
@@ -37,7 +37,7 @@ training:
     num_training_steps: 3e5
     num_warmup_steps: 5e3
   optimizer:
-    lr: 5e-5
+    lr: 1e-4
     betas: [0.9, 0.999]
     weight_decay: 0.05
   resume_from_ckpt: null

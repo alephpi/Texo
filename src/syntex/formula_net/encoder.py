@@ -1,4 +1,5 @@
 # adapted from PPHGNetV2 and PPHGNetV2_B4_Formula
+import logging
 from pathlib import Path
 
 import torch
@@ -80,12 +81,12 @@ class HGNetFormulaHF(PreTrainedModel):
         self.projection = nn.Linear(backbone_output_dim, config.hidden_size)
 
         if config.pretrained_backbone:
-            print(f"load pretrained backbone from {config.pretrained_backbone}")
+            logging.log(logging.INFO, f"load pretrained backbone from {config.pretrained_backbone}")
             backbone_state_dict = torch.load(config.pretrained_backbone)
             self.backbone.load_state_dict(backbone_state_dict)
 
             if config.freeze_backbone:
-                print("freeze backbone weight")
+                logging.log(logging.INFO, "freeze backbone weight")
                 self._freeze_norm(self.backbone)
                 self._freeze_parameters(self.backbone)
 
