@@ -15,10 +15,11 @@ dependencies = [
     "opencv-python>=4.10.0.84",
     "pillow>=11.1.0",
     "rapidfuzz>=3.13.0",
+    "rich>=10.2.2",
     "tensorboard>=2.20.0",
     "torch==2.7.0",
     "torchvision>=0.20.1",
-    "transformers<4.50",
+    "transformers==4.47.0",
     "wand>=0.6.13",
 ]
 
