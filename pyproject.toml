@@ -26,6 +26,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "jupyterlab>=4.4.5",
+    "matplotlib>=3.10.6",
     "orjson>=3.11.3",
     "pytest>=8.4.1",
     "tensorboard-plugin-profile>=2.20.6",

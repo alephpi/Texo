@@ -209,3 +209,4 @@ node_modules/
 outputs
 !.gitkeep
 !src/formula_net/convert.log
+*.json
