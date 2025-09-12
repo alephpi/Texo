@@ -1,5 +1,6 @@
 import torch
 from lightning import LightningModule
+from tqdm import tqdm
 from transformers import (
     AutoConfig,
     AutoModel,
@@ -37,7 +38,6 @@ class FormulaNetLit(LightningModule):
         self.optimizer = torch.optim.AdamW(self.model.parameters(), **self.training_config["optimizer"])
         self.scheduler = get_cosine_with_min_lr_schedule_with_warmup(self.optimizer, **self.training_config["lr_scheduler"])
         self.tokenizer: PreTrainedTokenizerFast = PreTrainedTokenizerFast.from_pretrained(self.model_config["tokenizer_path"])
-        self.loss_fct = torch.nn.CrossEntropyLoss()
 
     def forward(self, pixel_values, decoder_input_ids, decoder_attention_mask, labels, **kwargs):
         # here we don't do token shift for labels, since the MBartForCausalLM behavior is different from RobertaForCausalLM or GPT2LMHeadModel
@@ -75,34 +75,40 @@ class FormulaNetLit(LightningModule):
         loss = self.model_step(batch, batch_idx)
         self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
     
-    def test_step(self, batch, batch_idx):
-        labels = batch["labels"]
+    def evaluation_step(self, pixel_values, labels):
         labels[labels == -100] = self.model.config.pad_token_id
-        ref_str = self.tokenizer.batch_decode(batch["labels"], skip_special_tokens=True)
+        ref_str = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
 
         max_length = labels.shape[-1] # in validation, since we know how long the ground truth is, we truncate to it to save computation.
 
-        outputs = self.generate(batch["pixel_values"], num_beams=1, do_sample=False, max_length=max_length)
+        outputs = self.generate(pixel_values, num_beams=1, do_sample=False, max_length=max_length)
         pred_str = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
         bleu = compute_bleu(pred_str, ref_str)
         edit_distance = compute_edit_distance(pred_str, ref_str)
 
-        # outputs_beam_search = self.generate(batch["pixel_values"], num_beams=4, do_sample=False, max_length=max_length)
-        # pred_str_beam_search = self.tokenizer.batch_decode(outputs_beam_search, skip_special_tokens=True)
-        # bleu_beam_search = compute_bleu(pred_str_beam_search, ref_str)
-        # edit_distance_beam_search = compute_edit_distance(pred_str_beam_search, ref_str)
-
-        # log metrics
-        self.log("BLEU", bleu, on_step=False, on_epoch=True, logger=True)
-        self.log("edit_distance", edit_distance, on_step=False, on_epoch=True, logger=True)
-        # self.log("BLEU_beam_search", bleu_beam_search, on_step=False, on_epoch=True, logger=True)
-        # self.log("edit_distance_beam_search", edit_distance_beam_search, on_step=False, on_epoch=True, logger=True)
-
-        return
+        return bleu, edit_distance
 
     def on_train_epoch_end(self):
-        test_loader = self.trainer.datamodule.test_dataloader()
-        self.trainer.test(self, dataloaders=test_loader, verbose=False)
+        bleu = 0
+        edit_distance = 0
+        total_batches = 0
+        eval_dl = self.trainer.datamodule.test_dataloader()
+        for batch in tqdm(eval_dl, desc="Evaluation"):
+            pixel_values, labels = batch["pixel_values"].to(self.device), batch["labels"].to(self.device)
+            bleu_, edit_distance_ = self.evaluation_step(pixel_values, labels)
+            bleu += bleu_
+            edit_distance += edit_distance_
+            total_batches += 1
+            if total_batches == 2:
+                break
+        
+        metrics = {"bleu": bleu/total_batches, "edit_distance": edit_distance/total_batches}
+        # print(metrics)
+        step = self.trainer.global_step
+        for logger in self.trainer.loggers:
+            logger.log_metrics(metrics, step=step)
+        # put into callback_metrics for easy access
+        self.trainer.callback_metrics.update(metrics)
         return
 
     def configure_optimizers(self):
