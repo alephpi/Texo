@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 import torch
 from lightning import LightningDataModule
 from PIL import Image
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, RandomSampler
 
 from ..processor import (
     BaseMERImageProcessor,
@@ -13,6 +12,7 @@ from ..processor import (
     TextProcessor,
     TrainMERImageProcessor,
 )
+from .sampler import BucketBatchSampler, SortedSampler
 
 
 class MERDataset(Dataset):
@@ -25,6 +25,7 @@ class MERDataset(Dataset):
         with open(text_path, 'r', encoding='utf-8') as f:
             self.texts = f.readlines()
         self.texts = [text.strip() for text in self.texts]  # 去除换行符和首尾空格
+        # self.text_lengths = [0] * len(self.texts)
 
         # 验证图像文件是否存在
         self.padding_digits = 7 # for UniMER-1M
@@ -37,9 +38,9 @@ class MERDataset(Dataset):
             else:
                 ...
                 # print(f"{img_path=} does not exist.")
-            
+
             # text = self.texts[idx]
-            # length = len(text.split(' '))
+            # self.text_lengths[idx] = len(text.split(' '))
         self.pad_token_id = int(self.text_processor.tokenizer.pad_token_id)
 
     def __len__(self) -> int:
@@ -76,6 +77,7 @@ class MERDataset(Dataset):
         labels[:, :-1] = input_ids[:, 1:].clone()
         labels[:, -1] = self.pad_token_id
         labels[labels == self.pad_token_id] = -100
+
         return {
             "pixel_values": images,
             "decoder_input_ids": input_ids,
@@ -88,6 +90,7 @@ class MERDataModule(LightningDataModule):
         super().__init__()
         self.data_config = data_config
         self.save_hyperparameters()
+        self.sampler = RandomSampler # other options: SequentialSampler, SortedSampler
 
     def setup(self, stage=None):
         self.train_dataset = MERDataset(
@@ -114,8 +117,12 @@ class MERDataModule(LightningDataModule):
     def train_dataloader(self):
         train_loader = DataLoader(
                             dataset=self.train_dataset,
-                            batch_size=self.data_config["train_batch_size"],
-                            shuffle=True,
+                            batch_sampler=BucketBatchSampler(
+                                sampler=self.sampler(data_source=self.train_dataset),
+                                batch_size=self.data_config["train_batch_size"],
+                                drop_last=True,
+                                sort_key=lambda idx: len(self.train_dataset[idx]["labels"])
+                            ),
                             num_workers=self.data_config["num_workers"],
                             collate_fn=self.train_dataset.collate_fn,
                             pin_memory=True,
@@ -127,7 +134,7 @@ class MERDataModule(LightningDataModule):
         val_loader = DataLoader(
                             dataset=self.val_dataset,
                             batch_size=self.data_config["val_batch_size"],
-                            shuffle=False,
+                            sampler=SortedSampler(self.val_dataset, sort_key=lambda x: len(x["labels"])),
                             num_workers=self.data_config["num_workers"],
                             collate_fn=self.val_dataset.collate_fn,
                             pin_memory=True,
@@ -139,7 +146,7 @@ class MERDataModule(LightningDataModule):
         test_loader = DataLoader(
                             dataset=self.test_dataset,
                             batch_size=self.data_config["test_batch_size"],
-                            shuffle=False,
+                            sampler=SortedSampler(self.test_dataset, sort_key=lambda x: len(x["labels"])),
                             num_workers=self.data_config["num_workers"],
                             collate_fn=self.val_dataset.collate_fn,
                             pin_memory=True,

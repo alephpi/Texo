@@ -62,6 +62,7 @@ data:
       truncation: true
       return_tensors: pt
       return_attention_mask: true
+      pad_to_multiple_of: 8
   train_batch_size: 64
   val_batch_size: 64
   test_batch_size: 8
