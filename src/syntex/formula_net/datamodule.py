@@ -1,4 +1,4 @@
-from .dataset import MERDataset
+from .dataset import MERDataset, MERDatasetHF
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 
 from ..processor import (
@@ -18,9 +18,8 @@ class MERDataModule(LightningDataModule):
         self.sampler = RandomSampler # options: SequentialSampler, SortedSampler, RandomSampler
 
     def setup(self, stage=None):
-        self.train_dataset = MERDataset(
-                                image_dir=self.data_config["train_image_dir"],
-                                text_path=self.data_config["train_text_path"],
+        self.train_dataset = MERDatasetHF(
+                                dataset_path=self.data_config["train_dataset_path"],
                                 image_processor=TrainMERImageProcessor(**self.data_config["image_processor"]),
                                 text_processor=TextProcessor(self.data_config["text_processor"])
                                 )

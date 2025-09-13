@@ -1,5 +1,7 @@
 import os
+import io
 from pathlib import Path
+from datasets import Dataset as HFDataset
 
 import torch
 from PIL import Image
@@ -49,6 +51,53 @@ class MERDataset(Dataset):
         image = Image.open(img_path)
         processed_image = self.image_processor(image)
         text = self.texts[idx]
+
+        return {
+            'pixel_values': processed_image,
+            'text': text,
+        }
+
+    def collate_fn(self, batch):
+        texts = [item["text"] for item in batch]
+        images = torch.stack([item["pixel_values"] for item in batch])
+
+        # batch-process text in collate_fn
+        res = self.text_processor(texts)
+        input_ids: torch.Tensor = res["input_ids"] #type: ignore
+        attention_mask = res["attention_mask"]
+        # NOTE Unlike many seq2seq models tutorials, we don't apply token shift for labels
+        # i.e. we keep the first token as the start token, since MBart decoder compute loss without token shift, see https://github.com/huggingface/transformers/issues/10480
+        # also by careful debugging, we found the output.logits of MBartForCausalLM is aligned with the decoder_input_ids, not the shifted label
+        # shift to left
+        labels = input_ids.new_zeros(input_ids.shape)
+        labels[:, :-1] = input_ids[:, 1:].clone()
+        labels[:, -1] = self.pad_token_id
+        labels[labels == self.pad_token_id] = -100
+
+        return {
+            "pixel_values": images,
+            "decoder_input_ids": input_ids,
+            "decoder_attention_mask": attention_mask,
+            "labels": labels,
+        }
+
+class MERDatasetHF(Dataset):
+    def __init__(self, dataset_path, image_processor: BaseMERImageProcessor, text_processor: TextProcessor):
+        self.dataset = HFDataset.load_from_disk(dataset_path)
+        self.dataset = list(self.dataset) # we can afford loading the whole dataset into memory
+        self.image_processor = image_processor
+        self.text_processor = text_processor
+
+        self.pad_token_id = int(self.text_processor.tokenizer.pad_token_id)
+        self.labels_length = [len(item['text'].split(' ')) + 1 for item in self.dataset]
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(self, index: int):
+        image = Image.open(io.BytesIO(self.dataset[index]['image']))
+        processed_image = self.image_processor(image)
+        text = self.dataset[index]['text']
 
         return {
             'pixel_values': processed_image,

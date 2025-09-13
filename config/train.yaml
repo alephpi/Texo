@@ -45,8 +45,7 @@ training:
   resume_from_ckpt: null
 
 data:
-  train_image_dir: ./data/dataset/UniMER-1M_merged/images
-  train_text_path: ./data/dataset/UniMER-1M_merged/train_normalized_.txt
+  train_dataset_path: ./data/dataset/hf_dataset
   eval_image_dir: ./data/dataset/UniMER-Test/cpe
   eval_text_path: ./data/dataset/UniMER-Test/cpe.txt
   test_image_dir: ${data.eval_image_dir}
