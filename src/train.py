@@ -4,7 +4,7 @@ import lightning as L
 import torch
 from omegaconf import DictConfig
 
-from syntex.formula_net.dataset import MERDataModule
+from syntex.formula_net.datamodule import MERDataModule
 from syntex.formula_net.model import FormulaNetLit
 
 
