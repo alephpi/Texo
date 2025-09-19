@@ -1,0 +1,16 @@
+hydra:
+  run:
+    dir: ${working_directory}/outputs/${primary_subdir}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: ${working_directory}/outputs/${primary_subdir}/${now:%Y-%m-%d_%H-%M-%S}
+  launcher:
+    submitit_folder: ${hydra.sweep.dir}/.submitit/%j
+    name: neural-fcasa
+    partition: A40
+    nodes: ${trainer.num_nodes}
+    exclude: node[29,35]
+    gpus_per_node: ${trainer.devices}
+    cpus_per_task: 20
+    tasks_per_node: 1
+    mem_gb: 50
+    timeout_min: 1440

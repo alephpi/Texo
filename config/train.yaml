@@ -1,10 +1,12 @@
 output_dir: ${hydra:runtime.output_dir}
 
 hydra:
-  run:
-    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
   job:
     name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
+  run:
+    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
 
 model:
   tokenizer_path: ./data/tokenizer
@@ -28,7 +30,7 @@ model:
     bos_token_id: 2
     eos_token_id: 3
     pad_token_id: 0
-    forced_eos_token_id: 3
+    forced_eos_token_id: ${model.decoder.eos_token_id}
     layer_norm_eps: 1e-5
     is_decoder: true
 
@@ -68,17 +70,21 @@ data:
   val_batch_size: 64
   test_batch_size: 8
   num_workers: 10
+  sampling_strategy: null
 
 trainer:
   _target_: lightning.pytorch.trainer.Trainer
   default_root_dir: ${output_dir}
-  accelerator: auto
-  devices: auto
+  accelerator: gpu
+  devices: 1
+  num_nodes: 1
   precision: bf16-mixed
   log_every_n_steps: 50
   max_epochs: 10
   val_check_interval: 1000
   profiler: null
+  # gradient_clip_val: 2.0
+  # gradient_clip_algorithm: norm
 
   callbacks:
     - _target_: lightning.pytorch.callbacks.ModelCheckpoint

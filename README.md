@@ -1,0 +1,1 @@
+syntex is a minimal latex OCR package
