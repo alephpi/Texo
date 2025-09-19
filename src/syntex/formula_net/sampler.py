@@ -3,7 +3,7 @@
 
 import math
 
-from torch.utils.data.sampler import BatchSampler, Sampler, SubsetRandomSampler
+from torch.utils.data.sampler import BatchSampler, Sampler, SubsetRandomSampler, SequentialSampler
 
 
 class SortedSampler(Sampler):
@@ -20,9 +20,9 @@ class SortedSampler(Sampler):
 
     """
 
-    def __init__(self, data, sort_key):
-        super().__init__(data)
-        self.data = data
+    def __init__(self, data_source, sort_key):
+        super().__init__(data_source)
+        self.data = data_source
         self.sort_key = sort_key
         zip_ = [(i, self.sort_key(row)) for i, row in enumerate(self.data)]
         zip_ = sorted(zip_, key=lambda r: r[1])
@@ -82,6 +82,7 @@ class BucketBatchSampler(BatchSampler):
                  bucket_size_multiplier=100):
         super().__init__(sampler, batch_size, drop_last)
         self.sort_key = sort_key
+        self.sampler = sampler
         _bucket_size = batch_size * bucket_size_multiplier
         if hasattr(sampler, "__len__"):
             _bucket_size = min(_bucket_size, len(sampler))
@@ -89,7 +90,10 @@ class BucketBatchSampler(BatchSampler):
 
     def __iter__(self):
         for bucket in self.bucket_sampler:
-            sorted_sampler = SortedSampler(bucket, self.sort_key)
+            if isinstance(self.sampler, SortedSampler): # if sampler is already sorted, use it directly
+                sorted_sampler = SequentialSampler(bucket)
+            else:
+                sorted_sampler = SortedSampler(bucket, self.sort_key)
             for batch in SubsetRandomSampler(
                     list(BatchSampler(sorted_sampler, self.batch_size, self.drop_last))):
                 yield [bucket[i] for i in batch]

@@ -15,7 +15,13 @@ class MERDataModule(LightningDataModule):
         super().__init__()
         self.data_config = data_config
         self.save_hyperparameters()
-        self.sampler = RandomSampler # options: SequentialSampler, SortedSampler, RandomSampler
+        sampling_strategy: str = self.data_config.get("sampling_strategy",'')
+        sampling_strategies = {
+            "random": RandomSampler,
+            "sorted": SortedSampler,
+            "sequential": SequentialSampler
+        }
+        self.sampler = sampling_strategies.get(sampling_strategy, None)
 
     def setup(self, stage=None):
         self.train_dataset = MERDatasetHF(
@@ -39,19 +45,45 @@ class MERDataModule(LightningDataModule):
                                 )
 
     def train_dataloader(self):
-        train_loader = DataLoader(
-                            dataset=self.train_dataset,
-                            batch_sampler=BucketBatchSampler(
-                                sampler=self.sampler(data_source=self.train_dataset),
+        if self.sampler is None:
+            train_loader = DataLoader(
+                                dataset=self.train_dataset,
                                 batch_size=self.data_config["train_batch_size"],
-                                drop_last=True,
-                                sort_key=lambda idx: self.train_dataset.labels_length[idx]
-                            ),
-                            num_workers=self.data_config["num_workers"],
-                            collate_fn=self.train_dataset.collate_fn,
-                            pin_memory=True,
-                            persistent_workers=True
-                            )
+                                shuffle=True,
+                                drop_last=False,
+                                num_workers=self.data_config["num_workers"],
+                                collate_fn=self.train_dataset.collate_fn,
+                                pin_memory=True,
+                                persistent_workers=True
+                                )
+        elif self.sampler == SortedSampler:
+            train_loader = DataLoader(
+                                dataset=self.train_dataset,
+                                batch_sampler=BucketBatchSampler(
+                                    sampler=self.sampler(data_source=self.train_dataset.labels_length, sort_key=lambda idx: idx),
+                                    batch_size=self.data_config["train_batch_size"],
+                                    drop_last=False,
+                                    sort_key=lambda idx: self.train_dataset.labels_length[idx]
+                                ),
+                                num_workers=self.data_config["num_workers"],
+                                collate_fn=self.train_dataset.collate_fn,
+                                pin_memory=True,
+                                persistent_workers=True
+                                )
+        else:
+            train_loader = DataLoader(
+                                dataset=self.train_dataset,
+                                batch_sampler=BucketBatchSampler(
+                                    sampler=self.sampler(data_source=self.train_dataset),
+                                    batch_size=self.data_config["train_batch_size"],
+                                    drop_last=False,
+                                    sort_key=lambda idx: self.train_dataset.labels_length[idx]
+                                ),
+                                num_workers=self.data_config["num_workers"],
+                                collate_fn=self.train_dataset.collate_fn,
+                                pin_memory=True,
+                                persistent_workers=True
+                                )
         return train_loader
     
     def val_dataloader(self):
