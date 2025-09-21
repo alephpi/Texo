@@ -15,6 +15,7 @@ if __name__ == '__main__':
         decoder_start_token_id=0,
         layer_norm_eps=1e-05,
         is_decoder=True,
+        tie_word_embeddings=False,
     )
 
     decoder = MBartForCausalLM(default_decoder_config)
