@@ -2,7 +2,7 @@ output_dir: ${hydra:runtime.output_dir}
 
 hydra:
   job:
-    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-freeze_backbone=${model.encoder.freeze_backbone}
+    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-decoder_layers=${model.decoder.decoder_layers}
   run:
     dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:

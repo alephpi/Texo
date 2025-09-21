@@ -1,0 +1,16 @@
+defaults:
+  - train
+  - override hydra/launcher: submitit_slurm
+  - _self_
+
+hydra:
+  launcher:
+    submitit_folder: ${hydra.sweep.dir}/.submitit/%j
+    name: syntex
+    partition: audible,A100,L40S,A40,V100-32GB
+    nodes: ${trainer.num_nodes}
+    gpus_per_node: ${trainer.devices}
+    cpus_per_task: 20
+    tasks_per_node: ${trainer.devices}
+    mem_gb: 50
+    timeout_min: 1440
