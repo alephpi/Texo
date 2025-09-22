@@ -11,7 +11,7 @@ from .hgnet2 import HGNetv2
 
 
 class HGNetFormula(nn.Module):
-    def __init__(self, stem_channels, stage_config, hidden_size, pretrained_backbone, freeze_backbone=True):
+    def __init__(self, stem_channels, stage_config, hidden_size, pretrained_backbone, freeze_backbone):
         super().__init__()
         backbone_output_dim = stage_config["stage4"][2]
         self.backbone = HGNetv2(stem_channels, stage_config)
@@ -130,7 +130,7 @@ if __name__ == "__main__":
                 "stage3": [512, 192, 1024, 3, True, True, 5, 6],
                 "stage4": [1024, 384, 2048, 1, True, True, 5, 6],
             },
-        "hidden_dim": 384,
+        "hidden_size": 384,
         "pretrained_backbone": pretrained_backbone,
         "freeze_backbone": True,
     }
