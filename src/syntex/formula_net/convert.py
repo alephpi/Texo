@@ -136,7 +136,7 @@ def validate_encoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     print(f"max absolute difference in output tensor: {np.abs(pp_out_numpy - pt_out_numpy).max()}")
     return pp_out_numpy - pt_out_numpy
 
-def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_arrays: list[np.ndarray], addition=None):
+def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_arrays: list[np.ndarray], addition=None, debug=False):
     print("validate decoder forward") 
 
     input_ids, attention_mask, encoder_hidden_states, encoder_attention_mask = random_arrays
@@ -149,22 +149,27 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     pp_encoder_attention_mask = paddle.to_tensor(np.ones_like(encoder_attention_mask)).cpu() if encoder_attention_mask else None
     pt_encoder_attention_mask = torch.from_numpy(encoder_attention_mask).cpu() if encoder_attention_mask else None
 
-    pp_act = pp_register_activation_hook(pp_layer)
-    pt_act = pt_register_activation_hook(pt_layer)
+    if debug:
+        pp_act = pp_register_activation_hook(pp_layer)
+        pt_act = pt_register_activation_hook(pt_layer)
+
+        pp_out: paddle.Tensor = pp_layer.forward(pp_input_ids, pp_attention_mask, pp_encoder_hidden_states, pp_encoder_attention_mask, return_dict=True).logits
+        pt_out: torch.Tensor = pt_layer.forward(pt_input_ids, pt_attention_mask, pt_encoder_hidden_states, pt_encoder_attention_mask,return_dict=True).logits
+
+        res = {}
+        for key, pp_value in pp_act.items():
+            pt_value = pt_act[key]
+            if isinstance(pp_value, np.ndarray) and isinstance(pt_value, np.ndarray):
+                res[key] = np.abs(pp_value - pt_value).max()
+            elif isinstance(pp_value, list) and isinstance(pt_value, list):
+                res[key] = [np.abs(p1 - p2).max() for p1, p2 in zip(pp_value, pt_value)]
+            else:
+                res[key] = "activation dismatch"
+
+        return res, pp_act, pt_act, pp_out, pt_out
 
     pp_out: paddle.Tensor = pp_layer.forward(pp_input_ids, pp_attention_mask, pp_encoder_hidden_states, pp_encoder_attention_mask, return_dict=True).logits
     pt_out: torch.Tensor = pt_layer.forward(pt_input_ids, pt_attention_mask, pt_encoder_hidden_states, pt_encoder_attention_mask,return_dict=True).logits
-
-    res = {}
-    for key, pp_value in pp_act.items():
-        pt_value = pt_act[key]
-        if isinstance(pp_value, np.ndarray) and isinstance(pt_value, np.ndarray):
-            res[key] = np.abs(pp_value - pt_value).max()
-        elif isinstance(pp_value, list) and isinstance(pt_value, list):
-            res[key] = [np.abs(p1 - p2).max() for p1, p2 in zip(pp_value, pt_value)]
-        else:
-            res[key] = "activation dismatch"
-    return res, pp_act, pt_act, pp_out, pt_out
 
     if addition:
         pt_out = addition(pt_out)
@@ -175,7 +180,7 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     assert pp_out_shape == pt_out_shape, f"Output shape mismatch: {pp_out_shape} vs {pt_out_shape}"
     print(f"output shape={pp_out_shape}")
     print(f"max absolute difference in output tensor: {np.abs(pp_out_numpy - pt_out_numpy).max()}")
-    print(f"max absolute difference in output tensor: {np.count_nonzero(pp_out_numpy.argmax(axis=-1) - pt_out_numpy.argmax(axis=-1))}")
+    print(f"difference in label prediction: {np.count_nonzero(pp_out_numpy.argmax(axis=-1) - pt_out_numpy.argmax(axis=-1))}")
     return pp_out_numpy , pt_out_numpy
 
 def pp_register_activation_hook(pp_model: pnn.Layer):
@@ -265,11 +270,15 @@ def main():
         {"Global.pretrained_model": ckpt_path},
     )
 
+    # disable parallel decoding in FormulaNet-S
+    assert config["Architecture"]["Head"]["use_parallel"] == False
+    assert config["Architecture"]["Head"]["parallel_step"] == 3 # 保持3的原因是因为我篡改了paddle源码，这样保证可以全部读取ppformulanet-S的1029个embed_position的嵌入
+
     model = build_model(config["Architecture"])
     best_model_dict = load_model(
         config, model, model_type=config["Architecture"]["model_type"]
     )
-    # delete useless layers in paddle model
+    # delete useless layers in encoder model (I guess it is useful for pretraining)
     del model.backbone.pphgnet_b4.avg_pool
     del model.backbone.pphgnet_b4.last_conv
     del model.backbone.pphgnet_b4.act
@@ -300,7 +309,7 @@ def main():
 
     DECODER_CONFIG = MBartConfig(
         vocab_size=50000,
-        max_position_embeddings=1027,
+        max_position_embeddings=1024+3,
         d_model=384,
         decoder_layers=2,
         decoder_attention_heads=16,
@@ -345,7 +354,7 @@ def main():
     validate_encoder_forward(paddle_encoder, torch_encoder, x)
 
     from pathlib import Path
-    path = Path(__file__).resolve().parent / "formulanet_backbone.pt"
+    path = Path(__file__).resolve().parent / "formulanet_encoder.pt"
     torch.save(torch_encoder.state_dict(),path)
     print(f"encoder saved to {path}")
 
@@ -364,6 +373,10 @@ def main():
     encoder_hidden_states = np.random.rand(16, 144, 384).astype(np.float32)
 
     validate_decoder_forward(paddle_decoder, torch_decoder, [decoder_input_ids, decoder_attention_mask, encoder_hidden_states, None])
+
+    path = Path(__file__).resolve().parent / "formulanet_decoder.pt"
+    torch.save(torch_decoder.state_dict(),path)
+    print(f"decoder saved to {path}")
 
 
 

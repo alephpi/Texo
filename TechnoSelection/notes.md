@@ -203,11 +203,14 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
   (lm_head) 19.20 (50000*384)
 ```
 
+- [x] 实现 pytorch 版本的 pphgnet_b4
+- [x] 实现 paddle 版本的 pphgnet_b4 到 pytorch 的权重迁移，随机输入前向传播误差小于 6e-5
+
 现在的问题是，把 vocab_size 缩小到 687 以后，只有 6M 大小的 decoder 在没有预训练权重的初始化下，CE loss 降到 1.5 就几乎不动了。这其中有几种可能：
 1. 首要的原因是从头训练小模型非常难以优化，因为冗余参数变少了，导致在优化空间中更难找到一条容易的路径前往极值点。PPformulanet 是从大 decoder（hidden dim=1024）插值而来，具体从谁的 decoder 插值？（猜测是 UniMERNet），怎么插值？文章中都没有详说。
 2. 是否可以加上 label_smoothing？用 transformers 自带的 loss 计算的话，label smoothing 为 0（建议为 0.1）
 3. 是否可以考虑用 Muon 优化器？其效率比 Adam 更高。
-~~4. 考虑增大 decoder 的宽度和层数。对于 UniMERNet 而言，其宽度至少为 512，其层数至少为 24（4*6）。~~
+4. ~~考虑增大 decoder 的宽度和层数。对于 UniMERNet 而言，其宽度至少为 512，其层数至少为 24（4*6）。~~
 5. 还有一个粗暴的方法是，比较 MBart tokenizer 和我们的 tokenizer 的区别，把 MBart 中的无用 token 完全删去，然后用 ppformulanet 的 decoder 中的相关权重给我们的 decoder 初始化。
 
 破案了，是 transformers 的 bug https://github.com/huggingface/transformers/issues/40111，但是在修复 shift labels 的 bug 以后，loss 仍然降到 1.0 左右就停滞了。
@@ -215,3 +218,8 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 尝试将 sampling strategy 改为分桶（随机分桶、顺序分桶），尽管确实能加快训练速度（无效 padding 减少），但损失函数和梯度值均发生跳变，最终收敛效果也并不理想（未能超越无分桶的默认策略）。
 
 准备尝试用 ppformulanet 的 decoder 权重来初始化训练。
+注意 ppformulanet-S 有几项设置需修改，才能具有较小误差：
+1. `is_export`: 这个选项极坑，在源代码中即便设置为 `False`，也会在 `eval` 模式下在 `forward` 函数内被篡改为 `True`。
+2. `use_parallel`: 改为 `False`。在百度原实现中，S 模型是追求加速，故同时并行预测 3 个 token，需关闭，注意到此时序列最长为 1024+2=1026，而非 1024+2+3=1029
+3. `length_aware`: 在百度实现中，S 模型的编码器输出除了进入 decoder 外，在训练时还会进入一个用于预测 token 长度的小 decoder，用辅助损失对编码器进行训练，这可以被视为一种对全局长度信息的短路训练。因为它不影响主 decoder，因此无需更改。
+- [x] 实现 paddle 版本的 mbart decoder 到 transformers 的权重迁移，随机输入前向传播误差小于 8e-3
