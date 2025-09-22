@@ -207,7 +207,11 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 1. 首要的原因是从头训练小模型非常难以优化，因为冗余参数变少了，导致在优化空间中更难找到一条容易的路径前往极值点。PPformulanet 是从大 decoder（hidden dim=1024）插值而来，具体从谁的 decoder 插值？（猜测是 UniMERNet），怎么插值？文章中都没有详说。
 2. 是否可以加上 label_smoothing？用 transformers 自带的 loss 计算的话，label smoothing 为 0（建议为 0.1）
 3. 是否可以考虑用 Muon 优化器？其效率比 Adam 更高。
-4. 考虑增大 decoder 的宽度和层数。对于 UniMERNet 而言，其宽度至少为 512，其层数至少为 24（4*6）。
+~~4. 考虑增大 decoder 的宽度和层数。对于 UniMERNet 而言，其宽度至少为 512，其层数至少为 24（4*6）。~~
 5. 还有一个粗暴的方法是，比较 MBart tokenizer 和我们的 tokenizer 的区别，把 MBart 中的无用 token 完全删去，然后用 ppformulanet 的 decoder 中的相关权重给我们的 decoder 初始化。
 
-破案了，是 transformers 的 bug https://github.com/huggingface/transformers/issues/40111
+破案了，是 transformers 的 bug https://github.com/huggingface/transformers/issues/40111，但是在修复 shift labels 的 bug 以后，loss 仍然降到 1.0 左右就停滞了。
+尝试了将 `hidden_size` 扩大到 `512,768,1024`，无帮助。将 `decoder_layers` 增加到 `4，8，12` 也没有帮助。
+尝试将 sampling strategy 改为分桶（随机分桶、顺序分桶），尽管确实能加快训练速度（无效 padding 减少），但损失函数和梯度值均发生跳变，最终收敛效果也并不理想（未能超越无分桶的默认策略）。
+
+准备尝试用 ppformulanet 的 decoder 权重来初始化训练。
