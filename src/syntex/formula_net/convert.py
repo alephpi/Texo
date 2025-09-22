@@ -152,8 +152,8 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     pp_act = pp_register_activation_hook(pp_layer)
     pt_act = pt_register_activation_hook(pt_layer)
 
-    pt_out: torch.Tensor = pt_layer.forward(pt_input_ids, pt_attention_mask, pt_encoder_hidden_states, pt_encoder_attention_mask,return_dict=True).logits
     pp_out: paddle.Tensor = pp_layer.forward(pp_input_ids, pp_attention_mask, pp_encoder_hidden_states, pp_encoder_attention_mask, return_dict=True).logits
+    pt_out: torch.Tensor = pt_layer.forward(pt_input_ids, pt_attention_mask, pt_encoder_hidden_states, pt_encoder_attention_mask,return_dict=True).logits
 
     res = {}
     for key, pp_value in pp_act.items():
@@ -180,32 +180,64 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
 
 def pp_register_activation_hook(pp_model: pnn.Layer):
     act = {}
-    def get_activation_hook(layer_name):
-        def hook(layer, input, output):
-            if isinstance(output, paddle.Tensor):
-                act[layer_name] = output.detach().numpy()
-            elif isinstance(output, tuple):
-                act[layer_name] = [o.detach().numpy() for o in output if isinstance(o, paddle.Tensor)]
+    def get_hook(layer_name, hook_type:str):
+        def pre_hook(layer, args):
+            if isinstance(args, paddle.Tensor):
+                act[layer_name+"_pre"] = args.detach().numpy()
+            elif isinstance(args, tuple):
+                act[layer_name+"_pre"] = [o.detach().numpy() for o in args if isinstance(o, paddle.Tensor)]
             else:
-                act[layer_name] = type(output)
-        return hook
+                act[layer_name+"_pre"] = type(args)
+ 
+        def post_hook(layer, args, output):
+            if isinstance(output, paddle.Tensor):
+                act[layer_name+"_post"] = output.detach().numpy()
+            elif isinstance(output, tuple):
+                act[layer_name+"_post"] = [o.detach().numpy() for o in output if isinstance(o, paddle.Tensor)]
+            else:
+                act[layer_name+"_post"] = type(output)
+
+        # return post_hook
+        if hook_type == "pre":
+            return pre_hook
+        elif hook_type == "post":
+            return post_hook
+        else:
+            raise ValueError(f"invalid hook_type: {hook_type}")
     for name, layer in pp_model.named_sublayers(include_self=True):
-        layer.register_forward_post_hook(get_activation_hook(name)) #type: ignore
+        layer.register_forward_pre_hook(get_hook(name, "pre")) #type: ignore
+        layer.register_forward_post_hook(get_hook(name, "post")) #type: ignore
     return act
 
 def pt_register_activation_hook(pt_model: tnn.Module):
     act = {}
-    def get_activation_hook(layer_name):
-        def hook(module, input, output):
-            if isinstance(output, torch.Tensor):
-                act[layer_name] = output.detach().numpy()
-            elif isinstance(output, tuple):
-                act[layer_name] = [o.detach().numpy() for o in output if isinstance(o, torch.Tensor)]
+    def get_hook(layer_name, hook_type:str):
+        def pre_hook(module, args):
+            if isinstance(args, torch.Tensor):
+                act[layer_name+"_pre"] = args.detach().numpy()
+            elif isinstance(args, tuple):
+                act[layer_name+"_pre"] = [o.detach().numpy() for o in args if isinstance(o, torch.Tensor)]
             else:
-                act[layer_name] = type(output)
-        return hook
+                act[layer_name+"_pre"] = type(args)
+
+        def post_hook(module, args, output):
+            if isinstance(output, torch.Tensor):
+                act[layer_name+"_post"] = output.detach().numpy()
+            elif isinstance(output, tuple):
+                act[layer_name+"_post"] = [o.detach().numpy() for o in output if isinstance(o, torch.Tensor)]
+            else:
+                act[layer_name+"_post"] = type(output)
+        # return post_hook
+        if hook_type == "pre":
+            return pre_hook
+        elif hook_type == "post":
+            return post_hook
+        else:
+            raise ValueError(f"invalid hook_type: {hook_type}")
+ 
     for name, module in pt_model.named_modules():
-        module.register_forward_hook(get_activation_hook(name))
+        module.register_forward_pre_hook(get_hook(name, "pre"))
+        module.register_forward_hook(get_hook(name, "post"))
     return act
 
 
