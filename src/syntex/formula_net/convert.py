@@ -148,9 +148,23 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     pt_encoder_hidden_states = torch.from_numpy(encoder_hidden_states).cpu()
     pp_encoder_attention_mask = paddle.to_tensor(np.ones_like(encoder_attention_mask)).cpu() if encoder_attention_mask else None
     pt_encoder_attention_mask = torch.from_numpy(encoder_attention_mask).cpu() if encoder_attention_mask else None
+
+    pp_act = pp_register_activation_hook(pp_layer)
+    pt_act = pt_register_activation_hook(pt_layer)
+
     pt_out: torch.Tensor = pt_layer.forward(pt_input_ids, pt_attention_mask, pt_encoder_hidden_states, pt_encoder_attention_mask,return_dict=True).logits
     pp_out: paddle.Tensor = pp_layer.forward(pp_input_ids, pp_attention_mask, pp_encoder_hidden_states, pp_encoder_attention_mask, return_dict=True).logits
 
+    res = {}
+    for key, pp_value in pp_act.items():
+        pt_value = pt_act[key]
+        if isinstance(pp_value, np.ndarray) and isinstance(pt_value, np.ndarray):
+            res[key] = np.abs(pp_value - pt_value).max()
+        elif isinstance(pp_value, list) and isinstance(pt_value, list):
+            res[key] = [np.abs(p1 - p2).max() for p1, p2 in zip(pp_value, pt_value)]
+        else:
+            res[key] = "activation dismatch"
+    return res, pp_act, pt_act
 
     if addition:
         pt_out = addition(pt_out)
@@ -163,6 +177,37 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     print(f"max absolute difference in output tensor: {np.abs(pp_out_numpy - pt_out_numpy).max()}")
     print(f"max absolute difference in output tensor: {np.count_nonzero(pp_out_numpy.argmax(axis=-1) - pt_out_numpy.argmax(axis=-1))}")
     return pp_out_numpy , pt_out_numpy
+
+def pp_register_activation_hook(pp_model: pnn.Layer):
+    act = {}
+    def get_activation_hook(layer_name):
+        def hook(layer, input, output):
+            if isinstance(output, paddle.Tensor):
+                act[layer_name] = output.detach().numpy()
+            elif isinstance(output, tuple):
+                act[layer_name] = [o.detach().numpy() for o in output if isinstance(o, paddle.Tensor)]
+            else:
+                act[layer_name] = type(output)
+        return hook
+    for name, layer in pp_model.named_sublayers(include_self=True):
+        layer.register_forward_post_hook(get_activation_hook(name)) #type: ignore
+    return act
+
+def pt_register_activation_hook(pt_model: tnn.Module):
+    act = {}
+    def get_activation_hook(layer_name):
+        def hook(module, input, output):
+            if isinstance(output, torch.Tensor):
+                act[layer_name] = output.detach().numpy()
+            elif isinstance(output, tuple):
+                act[layer_name] = [o.detach().numpy() for o in output if isinstance(o, torch.Tensor)]
+            else:
+                act[layer_name] = type(output)
+        return hook
+    for name, module in pt_model.named_modules():
+        module.register_forward_hook(get_activation_hook(name))
+    return act
+
 
 
 def main():
@@ -271,7 +316,6 @@ def main():
     torch.save(torch_encoder.state_dict(),path)
     print(f"encoder saved to {path}")
 
-
     paddle_decoder.eval()
     torch_decoder.eval()
 
@@ -285,6 +329,7 @@ def main():
     decoder_input_ids =  np.random.randint(0, 50000, size=input_shape).astype(np.int32)
     decoder_attention_mask = np.ones(input_shape, dtype=np.int32)
     encoder_hidden_states = np.random.rand(16, 144, 384).astype(np.float32)
+
     validate_decoder_forward(paddle_decoder, torch_decoder, [decoder_input_ids, decoder_attention_mask, encoder_hidden_states, None])
 
 
