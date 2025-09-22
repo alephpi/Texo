@@ -164,7 +164,7 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
             res[key] = [np.abs(p1 - p2).max() for p1, p2 in zip(pp_value, pt_value)]
         else:
             res[key] = "activation dismatch"
-    return res, pp_act, pt_act
+    return res, pp_act, pt_act, pp_out, pt_out
 
     if addition:
         pt_out = addition(pt_out)
