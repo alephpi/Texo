@@ -2,7 +2,7 @@ output_dir: ${hydra:runtime.output_dir}
 
 hydra:
   job:
-    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-decoder_layers=${model.decoder.decoder_layers}
+    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-decoder_layers=${model.decoder.decoder_layers}-hidden_size=${model.encoder.hidden_size}
   run:
     dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
@@ -26,7 +26,7 @@ model:
     d_model: ${model.encoder.hidden_size}
     decoder_layers: 2
     decoder_attention_heads: 16
-    decoder_ffn_dim: 1536
+    decoder_ffn_dim: ${eval:'4*${model.encoder.hidden_size}'}
     bos_token_id: 2
     eos_token_id: 3
     pad_token_id: 0

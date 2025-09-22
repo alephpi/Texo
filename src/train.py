@@ -2,7 +2,9 @@ import logging
 import hydra
 import lightning as L
 import torch
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
+
+OmegaConf.register_new_resolver("eval", eval)
 
 from syntex.formula_net.datamodule import MERDataModule
 from syntex.formula_net.model import FormulaNetLit

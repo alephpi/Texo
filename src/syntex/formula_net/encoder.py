@@ -108,9 +108,9 @@ class HGNetFormulaHF(PreTrainedModel):
 
     def forward(self, pixel_values, **kwargs):
         out = self.backbone(pixel_values)
+        # (B,C,H,W) -> (B,C,H*W) -> (B,H*W,C)
         out = out.flatten(2).transpose(1, 2)
         out = self.projection(out)
-        # (B,C,H,W) -> (B,C,H*W) -> (B,H*W,C)
 
         return BaseModelOutput(last_hidden_state=out)
 
