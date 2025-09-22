@@ -308,6 +308,7 @@ def main():
         decoder_start_token_id=0,
         layer_norm_eps=1e-05,
         is_decoder=True,
+        scale_embedding=True,
         tie_word_embeddings=False,
     )
 

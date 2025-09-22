@@ -33,6 +33,7 @@ model:
     forced_eos_token_id: ${model.decoder.eos_token_id}
     layer_norm_eps: 1e-5
     is_decoder: true
+    scale_embedding: true
     tie_word_embeddings: false
 
 training:
