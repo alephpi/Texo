@@ -13,7 +13,7 @@ import torch.nn as tnn
 import transformers
 import transformers.activations
 
-# please refer https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/model_convert/convert_from_pytorch/pytorch_api_mapping_cn.html#torch
+# refer to https://www.paddlepaddle.org.cn/documentation/docs/zh/develop/guides/model_convert/convert_from_pytorch/pytorch_api_mapping_cn.html#torch
 # for api differences between paddle and torch
 CONVERT_MAP: dict[tuple[type[pnn.Layer], type[tnn.Module]], dict[str, str]] = {
     (pnn.Conv2D, tnn.Conv2d): {
@@ -202,7 +202,6 @@ def pp_register_activation_hook(pp_model: pnn.Layer):
             else:
                 act[layer_name+"_post"] = type(output)
 
-        # return post_hook
         if hook_type == "pre":
             return pre_hook
         elif hook_type == "post":
@@ -232,7 +231,7 @@ def pt_register_activation_hook(pt_model: tnn.Module):
                 act[layer_name+"_post"] = [o.detach().numpy() for o in output if isinstance(o, torch.Tensor)]
             else:
                 act[layer_name+"_post"] = type(output)
-        # return post_hook
+
         if hook_type == "pre":
             return pre_hook
         elif hook_type == "post":
@@ -290,22 +289,23 @@ def main():
     paddle_encoder = model.backbone.pphgnet_b4
     paddle_decoder = model.head.decoder
 
-    from ptocr.syntex.formula_net.decoder import MBartConfig, MBartForCausalLM
-    from ptocr.syntex.formula_net.encoder import HGNetFormula
+    from transformers import MBartConfig, MBartForCausalLM
+
+    from ptocr.syntex.formula_net.formulanet import HGNetv2, HGNetv2Config
     # torch model that needs to be converted to
-    ENCODER_CONFIG = {
-        "stem_channels": [3, 32, 48],
-        "stage_config": {
-                # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
-                "stage1": [48, 48, 128, 1, False, False, 3, 6],
-                "stage2": [128, 96, 512, 1, True, False, 3, 6],
-                "stage3": [512, 192, 1024, 3, True, True, 5, 6],
-                "stage4": [1024, 384, 2048, 1, True, True, 5, 6],
-            },
-        "hidden_size": 384,
-        "pretrained_backbone": None,
-        "freeze_backbone": False,
-    }
+    ENCODER_CONFIG = HGNetv2Config(
+        stem_channels=[3, 32, 48],
+        stage_config= {
+            # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
+            "stage1": (48, 48, 128, 1, 6, 3, False, False),
+            "stage2": (128, 96, 512, 1, 6, 3, True, False),
+            "stage3": (512, 192, 1024, 3, 6, 5, True, True),
+            "stage4": (1024, 384, 2048, 1, 6, 5, True, True),
+        },
+        hidden_size= 2048,
+        pretrained_backbone="",
+        freeze_backbone= False,
+    )
 
     DECODER_CONFIG = MBartConfig(
         vocab_size=50000,
@@ -321,7 +321,7 @@ def main():
         tie_word_embeddings=False,
     )
 
-    torch_encoder = HGNetFormula(**ENCODER_CONFIG).backbone
+    torch_encoder = HGNetv2(ENCODER_CONFIG)
     torch_decoder = MBartForCausalLM(DECODER_CONFIG)
 
 
@@ -377,6 +377,8 @@ def main():
     path = Path(__file__).resolve().parent / "formulanet_decoder.pt"
     torch.save(torch_decoder.state_dict(),path)
     print(f"decoder saved to {path}")
+
+
 
 
 

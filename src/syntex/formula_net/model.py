@@ -3,8 +3,6 @@ from lightning import LightningModule
 from lightning.pytorch.utilities import grad_norm
 from torch.optim.optimizer import Optimizer
 from transformers import (
-    AutoConfig,
-    AutoModel,
     MBartConfig,
     MBartForCausalLM,
     VisionEncoderDecoderModel,
@@ -12,11 +10,9 @@ from transformers import (
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
-from .encoder import HGNetFormulaConfig, HGNetFormulaHF
+from .formulanet import HGNetv2, HGNetv2Config
 from .scores import compute_bleu, compute_edit_distance
 
-AutoConfig.register("hgnet_formula", HGNetFormulaConfig)
-AutoModel.register(HGNetFormulaConfig, HGNetFormulaHF)
 
 class FormulaNetLit(LightningModule):
     def __init__(self, model_config, training_config):
@@ -27,7 +23,7 @@ class FormulaNetLit(LightningModule):
         self.save_hyperparameters()
 
         self.model = VisionEncoderDecoderModel(
-            encoder=HGNetFormulaHF(HGNetFormulaConfig(**self.model_config["encoder"])),
+            encoder=HGNetv2(HGNetv2Config(**self.model_config["encoder"])),
             decoder=MBartForCausalLM(MBartConfig(**self.model_config["decoder"])),
         )
         # transformers.VisionEncoderDecoderModel is not smart enough to initialize from the encoder and decoder

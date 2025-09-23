@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from .layers import ConvBNAct, LightConvBNAct
 
-__all__ = ["HGNetv2"]
+__all__ = ["StemBlock", "HG_Stage"]
 class StemBlock(nn.Module):
     # for HGNetv2
     def __init__(self, in_channels, mid_channels, out_channels):
@@ -133,14 +133,14 @@ class HG_Block(nn.Module):
 class HG_Stage(nn.Module):
     def __init__(
         self,
-        in_channels,
-        mid_channels,
-        out_channels,
-        block_num,
-        layer_num,
-        downsample=True,
-        light_block=True,
-        kernel_size=3,
+        in_channels:int,
+        mid_channels:int,
+        out_channels:int,
+        num_blocks:int,
+        num_layers:int,
+        kernel_size:int=3,
+        downsample:bool=True,
+        light_block:bool=True,
         # drop_path=0.0,
     ):
         super().__init__()
@@ -156,13 +156,13 @@ class HG_Stage(nn.Module):
             )
 
         blocks_list = []
-        for i in range(block_num):
+        for i in range(num_blocks):
             blocks_list.append(
                 HG_Block(
                     in_channels if i == 0 else out_channels,
                     mid_channels,
                     out_channels,
-                    layer_num,
+                    num_layers,
                     residual=False if i == 0 else True,
                     kernel_size=kernel_size,
                     light_block=light_block,
@@ -175,55 +175,4 @@ class HG_Stage(nn.Module):
         if self.use_downsample:
             x = self.downsample(x)
         x = self.blocks(x)
-        return x
-
-
-# NOTE we follow the D-FINE structure which only model the backbone of PPHGNetV2 in HGNetV2
-# we seperate the task specific head into the task specific model
-# i.e. last_conv layers etc. in FormulaNet
-class HGNetv2(nn.Module):
-    """
-    HGNetV2 backbone
-    """
-
-    def __init__(self, stem_channels, stage_config):
-        super().__init__()
-
-        # stem
-        self.stem = StemBlock(
-            in_channels=stem_channels[0],
-            mid_channels=stem_channels[1],
-            out_channels=stem_channels[2],
-        )
-
-        # stages
-        self.stages = nn.ModuleList()
-        for k in stage_config:
-            (
-                in_channels,
-                mid_channels,
-                out_channels,
-                block_num,
-                downsample,
-                light_block,
-                kernel_size,
-                layer_num,
-            ) = stage_config[k]
-            self.stages.append(
-                HG_Stage(
-                    in_channels,
-                    mid_channels,
-                    out_channels,
-                    block_num,
-                    layer_num,
-                    downsample,
-                    light_block,
-                    kernel_size,
-                )
-            )
-
-    def forward(self, x):
-        x = self.stem(x)
-        for stage in self.stages:
-            x = stage(x)
         return x
