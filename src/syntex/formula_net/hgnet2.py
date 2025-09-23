@@ -12,10 +12,10 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers import AutoConfig, AutoModel, PretrainedConfig, PreTrainedModel
+from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutput
 
-from .layers import ConvBNAct, LightConvBNAct
+from .layer import ConvBNAct, LightConvBNAct
 
 __all__ = ["HGNetv2", "HGNetv2Config"]
 class StemBlock(nn.Module):
@@ -244,7 +244,7 @@ class HGNetv2(PreTrainedModel):
         return BaseModelOutput(last_hidden_state=out)
 
     def _freeze_norm(self, m: nn.Module):
-        from .layers import FrozenBatchNorm2d
+        from .layer import FrozenBatchNorm2d
         if isinstance(m, nn.BatchNorm2d):
             m = FrozenBatchNorm2d(m.num_features)
         else:
@@ -257,6 +257,3 @@ class HGNetv2(PreTrainedModel):
     def _freeze_parameters(self, m: nn.Module):
         for p in m.parameters():
             p.requires_grad = False
-
-AutoConfig.register("my_hgnetv2", HGNetv2Config)
-AutoModel.register(HGNetv2Config, HGNetv2)
