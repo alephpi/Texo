@@ -16,14 +16,15 @@ from .scores import compute_bleu, compute_edit_distance
 
 
 class FormulaNetLit(LightningModule):
-    def __init__(self, model_config, training_config):
+    def __init__(self, tokenizer_path, model_config, training_config):
         super().__init__()
+        self.tokenizer_path = tokenizer_path
         self.model_config = model_config
         self.training_config = training_config
 
         self.save_hyperparameters()
 
-        self.tokenizer = PreTrainedTokenizerFast.from_pretrained(model_config.pop("tokenizer"))
+        self.tokenizer = PreTrainedTokenizerFast.from_pretrained(self.tokenizer_path)
         self.model = VisionEncoderDecoderModel(VisionEncoderDecoderConfig(**model_config))
         # transformers.VisionEncoderDecoderModel is not smart enough to initialize from the encoder and decoder
         # where we have to initialize the model.config manually as the following.

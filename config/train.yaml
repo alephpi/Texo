@@ -10,8 +10,8 @@ hydra:
 
 
 # adapted from PPHGNetV2 and PPHGNetV2_B4_Formula
+tokenizer_path: ./data/tokenizer
 model:
-  tokenizer: ./data/tokenizer
   encoder:
     model_type: my_hgnetv2
     stem_channels: [3, 32, 48]
@@ -66,7 +66,7 @@ data:
       width: 384
       height: 384
   text_processor:
-    tokenizer_path: ./data/tokenizer
+    tokenizer_path: ${tokenizer_path}
     tokenizer_config:
       add_special_tokens: true
       max_length: 1024

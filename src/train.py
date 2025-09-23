@@ -3,7 +3,7 @@ import logging
 import lightning as L
 import torch
 
-from syntex.formula_net.config import DictConfig
+from syntex.formula_net.config import DictConfig, OmegaConf, hydra
 from syntex.formula_net.datamodule import MERDataModule
 from syntex.formula_net.model import FormulaNetLit
 
@@ -15,7 +15,11 @@ def main(cfg: DictConfig):
     
     torch.set_float32_matmul_precision("medium")
 
-    model = FormulaNetLit(cfg.model, cfg.training)
+    # Set struct to False to allow for dynamic pop
+    OmegaConf.set_struct(cfg.model, False)
+    OmegaConf.set_struct(cfg.training, False)
+
+    model = FormulaNetLit(cfg.tokenizer_path, cfg.model, cfg.training)
     logging.log(logging.INFO, f"Model initialized.")
 
     datamodule = MERDataModule(data_config=cfg.data)
