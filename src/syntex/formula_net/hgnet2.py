@@ -183,6 +183,7 @@ class HG_Stage(nn.Module):
         x = self.blocks(x)
         return x
 
+# adapted from PPHGNetV2 and PPHGNetV2_B4_Formula
 class HGNetv2Config(PretrainedConfig):
     model_type = "my_hgnetv2" # do not confuse with the transformers hgnetv2
 
@@ -197,16 +198,16 @@ class HGNetv2Config(PretrainedConfig):
             "stage4": (1024, 384, 2048, 1, 6, 5, True, True),
         },
         hidden_size:int=384,
-        pretrained_backbone:str|Path="",
-        freeze_backbone:bool=False,
+        pretrained:str|Path="",
+        freeze:bool=False,
         **kwargs
     ):
         super().__init__(**kwargs)
         self.stem_channels = stem_channels
         self.stage_config = stage_config
         self.hidden_size = hidden_size
-        self.pretrained_backbone = pretrained_backbone
-        self.freeze_backbone = freeze_backbone
+        self.pretrained = pretrained
+        self.freeze = freeze
 
 # NOTE we follow the D-FINE structure which only model the backbone of PPHGNetV2 in HGNetV2
 # we seperate the task specific head into the task specific model
@@ -224,13 +225,13 @@ class HGNetv2(PreTrainedModel):
         self.stem = StemBlock(*config.stem_channels)
         self.stages = nn.ModuleList(HG_Stage(*config.stage_config[k]) for k in config.stage_config)
 
-        if config.pretrained_backbone:
-            logging.log(logging.INFO, f"load pretrained backbone from {config.pretrained_backbone}")
-            state_dict = torch.load(config.pretrained_backbone)
+        if config.pretrained:
+            logging.log(logging.INFO, f"load pretrained model from {config.pretrained}")
+            state_dict = torch.load(config.pretrained)
             self.load_state_dict(state_dict)
 
-            if config.freeze_backbone:
-                logging.log(logging.INFO, "freeze backbone weight")
+            if config.freeze:
+                logging.log(logging.INFO, "freeze model weight")
                 self._freeze_norm(self)
                 self._freeze_parameters(self)
 
