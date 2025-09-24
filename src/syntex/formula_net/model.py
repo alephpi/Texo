@@ -4,14 +4,10 @@ import torch
 from lightning import LightningModule
 from lightning.pytorch.utilities import grad_norm
 from torch.optim.optimizer import Optimizer
-from transformers import (
-    PreTrainedTokenizerFast,
-    VisionEncoderDecoderConfig,
-    VisionEncoderDecoderModel,
-)
+from transformers import PreTrainedTokenizerFast
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup
 
-from .config import OmegaConf
+from .formulanet import FormulaNet
 from .scores import compute_bleu, compute_edit_distance
 
 
@@ -25,13 +21,8 @@ class FormulaNetLit(LightningModule):
         self.save_hyperparameters()
 
         self.tokenizer = PreTrainedTokenizerFast.from_pretrained(self.tokenizer_path)
-        self.model = VisionEncoderDecoderModel(VisionEncoderDecoderConfig(**model_config))
-        # transformers.VisionEncoderDecoderModel is not smart enough to initialize from the encoder and decoder
-        # where we have to initialize the model.config manually as the following.
-        self.model.config.decoder_start_token_id = self.model.decoder.config.bos_token_id
-        self.model.config.pad_token_id = self.model.decoder.config.pad_token_id
-        self.model.config.eos_token_id = self.model.decoder.config.eos_token_id
-        # print(self.model.decoder.config)
+        self.model = FormulaNet(model_config)
+       # print(self.model.decoder.config)
 
         self.optimizer = torch.optim.AdamW(self.model.parameters(), **self.training_config["optimizer"])
         self.scheduler = get_cosine_with_min_lr_schedule_with_warmup(self.optimizer, **self.training_config["lr_scheduler"])
@@ -98,13 +89,13 @@ class FormulaNetLit(LightningModule):
     #     norms = grad_norm(self.model.decoder, norm_type=2)
     #     self.log_dict(norms)
     
-    def configure_gradient_clipping(self, optimizer: Optimizer, gradient_clip_val: int | float | None = None, gradient_clip_algorithm: str | None = None) -> None:
-        if self.current_epoch > 1:
-            super().configure_gradient_clipping(optimizer, gradient_clip_val, gradient_clip_algorithm)
-            # if do in on_before_optimizer_step, it will log gradient norms before the clip
-        norms = grad_norm(self.model.decoder, norm_type=2)
-        self.log_dict(norms)
-        return
+    # def configure_gradient_clipping(self, optimizer: Optimizer, gradient_clip_val: int | float | None = None, gradient_clip_algorithm: str | None = None) -> None:
+    #     if self.current_epoch > 1:
+    #         super().configure_gradient_clipping(optimizer, gradient_clip_val, gradient_clip_algorithm)
+    #         # if do in on_before_optimizer_step, it will log gradient norms before the clip
+    #     norms = grad_norm(self.model.decoder, norm_type=2)
+    #     self.log_dict(norms)
+    #     return
 
 
     def configure_optimizers(self):
@@ -116,21 +107,3 @@ class FormulaNetLit(LightningModule):
                 "frequency": 1,
             }
         }
-
-if __name__ == '__main__':
-
-    import pprint
-
-    import torchinfo
-    config = OmegaConf.load("./config/train.yaml")
-    OmegaConf.resolve(config.model)
-    config.model.pop("tokenizer")
-    model = VisionEncoderDecoderModel(VisionEncoderDecoderConfig(**OmegaConf.to_container(config.model)))
-
-    input_data = {
-        "pixel_values": torch.randn(16, 3, 384, 384, dtype=torch.float32),
-        "decoder_input_ids":torch.randint(0, config.model.decoder.vocab_size, (16, 256), dtype=torch.int32), 
-        "decoder_attention_mask": torch.ones(16, 256, dtype=torch.int32),
-    }
-    torchinfo.summary(model, input_data=input_data, depth=4, col_names=["input_size", "output_size", "num_params", "params_percent"])
-    pprint.pprint(model.config)
