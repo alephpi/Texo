@@ -1,13 +1,13 @@
-import os
 import io
+import os
 from pathlib import Path
-from datasets import Dataset as HFDataset
 
 import torch
+from datasets import Dataset as HFDataset
 from PIL import Image
 from torch.utils.data import Dataset
 
-from ..processor import (
+from .processor import (
     BaseMERImageProcessor,
     TextProcessor,
 )

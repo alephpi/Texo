@@ -1,4 +1,4 @@
-from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizerFast
 
 text_processor_default_config = {
     "tokenizer_path": "data/tokenizer",

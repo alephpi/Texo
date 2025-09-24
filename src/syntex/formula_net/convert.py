@@ -1,1 +1,0 @@
-./scripts/python/convert.py

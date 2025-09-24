@@ -3,9 +3,9 @@ import logging
 import lightning as L
 import torch
 
-from syntex.formula_net.config import DictConfig, OmegaConf, hydra
-from syntex.formula_net.datamodule import MERDataModule
-from syntex.formula_net.model import FormulaNetLit
+from datamodule import MERDataModule
+from syntex.utils.config import DictConfig, OmegaConf, hydra
+from task import FormulaNetLit
 
 
 @hydra.main(version_base="1.3.2",config_path="../config", config_name="train.yaml")

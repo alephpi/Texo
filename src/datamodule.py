@@ -1,14 +1,14 @@
-from .dataset import MERDataset, MERDatasetHF
+from lightning import LightningDataModule
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 
-from ..processor import (
+from syntex.data.dataset import MERDataset, MERDatasetHF
+from syntex.data.processor import (
     EvalMERImageProcessor,
     TextProcessor,
     TrainMERImageProcessor,
 )
-from .sampler import BucketBatchSampler, SortedSampler
+from syntex.data.sampler import BucketBatchSampler, SortedSampler
 
-from lightning import LightningDataModule
 
 class MERDataModule(LightningDataModule):
     def __init__(self, data_config: dict):

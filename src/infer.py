@@ -1,8 +1,8 @@
 import torch
 
-from syntex.formula_net.dataset import MERDataset
-from syntex.formula_net.model import FormulaNetLit
+from syntex.data.dataset import MERDataset
 from syntex.processor import EvalMERImageProcessor, TextProcessor
+from task import FormulaNetLit
 
 MODEL_CONFIG = {
     "tokenizer_path": "./data/tokenizer",

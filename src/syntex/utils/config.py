@@ -2,7 +2,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 from transformers import AutoConfig, AutoModel
 
-from .hgnet2 import HGNetv2, HGNetv2Config
+from ..model.hgnet2 import HGNetv2, HGNetv2Config
 
 # setup global configs
 AutoConfig.register("my_hgnetv2", HGNetv2Config)

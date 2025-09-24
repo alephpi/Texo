@@ -1,6 +1,6 @@
 from transformers import VisionEncoderDecoderConfig, VisionEncoderDecoderModel
 
-from .config import OmegaConf
+from ..utils.config import OmegaConf
 
 
 class FormulaNet(VisionEncoderDecoderModel):
