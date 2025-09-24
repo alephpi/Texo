@@ -21,7 +21,7 @@ model:
       stage3: [512, 192, 1024, 3, 6, 5, true, true]
       stage4: [1024, 384, 2048, 1, 6, 5, true, true]
     hidden_size: 2048
-    pretrained: ./src/syntex/formula_net/formulanet_encoder_hgnetv2.pt
+    pretrained: ./src/syntex/model/formulanet_encoder.pt
     freeze: true
   decoder:
     model_type: mbart

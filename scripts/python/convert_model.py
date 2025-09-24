@@ -283,10 +283,11 @@ def main():
 
     import sys
     sys.path.append("/home/mao/workspace/paddleOCR/PaddleOCR")
+    # sys.path.append("/home/mao/workspace/paddleOCR/ptocr")
 
     from ppocr.modeling.architectures import build_model
     from ppocr.postprocess import build_post_process
-    from ppocr.utils.save_load import load_model
+    from ppocr.utils.save_load import load_model as load_pp_model
     from tools.program import load_config, merge_config
     model_config = "./configs/rec/PP-FormuaNet/PP-FormulaNet-S.yaml"
     ckpt_path = "./models/rec_ppformulanet_s_train/best_accuracy.pdparams"
@@ -309,7 +310,7 @@ def main():
 
     print("---load paddle model---")
     pp_model = build_model(config["Architecture"])
-    best_model_dict = load_model(
+    best_model_dict = load_pp_model(
         config, pp_model, model_type=config["Architecture"]["model_type"]
     )
     # delete useless layers in encoder model (I guess it is useful for pretraining)
@@ -335,11 +336,12 @@ def main():
     print(f"{pp_total_params=}, {pp_trainable_params=}")
     print("Paddle counts BN running stats as its non_trainable params while torch doesn't count them as params(but buffers)")
 
-    from ptocr.syntex.formula_net.formulanet import load_model
+    from ptocr.syntex.model.formulanet import FormulaNet
+    from ptocr.syntex.model.formulanet import load_model as load_pt_model
 
     print("\n---load torch model---")
     # torch model that needs to be converted to
-    pt_model = load_model()
+    pt_model = load_pt_model()
     pt_model.eval()
 
     pt_encoder = pt_model.encoder
