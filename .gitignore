@@ -208,5 +208,5 @@ node_modules/
 **log**
 outputs
 !.gitkeep
-!src/formula_net/convert.log
+!src/syntex/formula_net/convert.log
 *.json
