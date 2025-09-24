@@ -12,7 +12,7 @@ class FormulaNet(VisionEncoderDecoderModel):
         self.config.pad_token_id = self.decoder.config.pad_token_id
         self.config.eos_token_id = self.decoder.config.eos_token_id
 
-def load_model(config_path="/home/mao/workspace/SynTeX/config/train.yaml"):
+def load_model(config_path="/home/mao/workspace/SynTeX/config/model/FormulaNet-S.yaml"):
     config = OmegaConf.load(config_path)
     OmegaConf.resolve(config.model)
     model = FormulaNet(OmegaConf.to_container(config.model))

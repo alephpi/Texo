@@ -4,6 +4,7 @@
 
 from inspect import getmro
 from itertools import product
+from pathlib import Path
 
 import numpy as np
 import paddle
@@ -117,13 +118,11 @@ def validate_block_params(pp_block: pnn.Layer, pt_block: tnn.Module):
     return diffs
 
 def validate_encoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_array: np.ndarray, addition=None):
-    print("validate encoder forward") 
-    print(f"input shape={random_array.shape}")
 
     pp_in = paddle.to_tensor(random_array, dtype=np.float32).cpu()
     pt_in = torch.from_numpy(random_array).cpu()
-    pp_out: paddle.Tensor = pp_layer(pp_in)
-    pt_out: torch.Tensor = pt_layer(pt_in)
+    pp_out: paddle.Tensor = pp_layer(pp_in).flatten(2).transpose((0, 2, 1))
+    pt_out: torch.Tensor = pt_layer(pt_in).last_hidden_state
 
     if addition:
         pt_out = addition(pt_out)
@@ -137,7 +136,6 @@ def validate_encoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
     return pp_out_numpy - pt_out_numpy
 
 def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_arrays: list[np.ndarray], addition=None, debug=False):
-    print("validate decoder forward") 
 
     input_ids, attention_mask, encoder_hidden_states, encoder_attention_mask = random_arrays
     pp_input_ids = paddle.to_tensor(input_ids).cpu()
@@ -173,6 +171,27 @@ def validate_decoder_forward(pp_layer: pnn.Layer, pt_layer: tnn.Module, random_a
 
     if addition:
         pt_out = addition(pt_out)
+
+    pp_out_shape, pt_out_shape = tuple(pp_out.shape), tuple(pt_out.shape)
+    pp_out_numpy, pt_out_numpy = pp_out.numpy(), pt_out.numpy(force=True)
+
+    assert pp_out_shape == pt_out_shape, f"Output shape mismatch: {pp_out_shape} vs {pt_out_shape}"
+    print(f"output shape={pp_out_shape}")
+    print(f"max absolute difference in output tensor: {np.abs(pp_out_numpy - pt_out_numpy).max()}")
+    print(f"difference in label prediction: {np.count_nonzero(pp_out_numpy.argmax(axis=-1) - pt_out_numpy.argmax(axis=-1))}")
+    return pp_out_numpy , pt_out_numpy
+
+def validate_whole_model(pp_model, pt_model, random_arrays, addition=None, debug=False):
+    pixel_values, input_ids, attention_mask = random_arrays
+    pp_pixel_values = paddle.to_tensor(pixel_values).cpu()
+    pt_pixel_values = torch.from_numpy(pixel_values).cpu()
+    pp_input_ids = paddle.to_tensor(input_ids).cpu()
+    pt_input_ids = torch.from_numpy(input_ids).cpu()
+    pp_attention_mask = paddle.to_tensor(attention_mask).cpu()
+    pt_attention_mask = torch.from_numpy(attention_mask).cpu()
+    pp_out: paddle.Tensor = pp_model.forward(pp_pixel_values, pp_input_ids, pp_attention_mask)[0]
+    pt_out: torch.Tensor = pt_model.forward(pt_pixel_values, pt_input_ids, pt_attention_mask, return_dict=True).logits
+
 
     pp_out_shape, pt_out_shape = tuple(pp_out.shape), tuple(pt_out.shape)
     pp_out_numpy, pt_out_numpy = pp_out.numpy(), pt_out.numpy(force=True)
@@ -241,12 +260,27 @@ def pt_register_activation_hook(pt_model: tnn.Module):
  
     for name, module in pt_model.named_modules():
         module.register_forward_pre_hook(get_hook(name, "pre"))
-        module.register_forward_hook(get_hook(name, "post"))
+        module.register_forward_hook(get_hook(name, "post")) #type: ignore
     return act
 
-
+def dummy_inputs(batch_size=16, seq_len=100, img_size=384, vocab_size=50000, seed=42):
+    np.random.seed(seed)
+    pixel_values = np.random.rand(batch_size, 3, img_size, img_size).astype(np.float32)
+    decoder_input_ids = np.random.randint(0, vocab_size, size=(batch_size, seq_len)).astype(np.int32)
+    decoder_attention_mask = np.ones((batch_size, seq_len), dtype=np.int32)
+    encoder_hidden_states = np.random.rand(batch_size, 144, 384).astype(np.float32)
+    return pixel_values, decoder_input_ids, decoder_attention_mask, encoder_hidden_states
 
 def main():
+    # dummy inputs
+    pixel_values, decoder_input_ids, decoder_attention_mask, encoder_hidden_states = dummy_inputs()
+    pp_pixel_values = paddle.to_tensor(pixel_values).cpu()
+    pt_pixel_values = torch.from_numpy(pixel_values).cpu()
+    pp_decoder_input_ids = paddle.to_tensor(decoder_input_ids).cpu()
+    pt_decoder_input_ids = torch.from_numpy(decoder_input_ids).cpu()
+    pp_decoder_attention_mask = paddle.to_tensor(decoder_attention_mask).cpu()
+    pt_decoder_attention_mask = torch.from_numpy(decoder_attention_mask).cpu()
+
     import sys
     sys.path.append("/home/mao/workspace/paddleOCR/PaddleOCR")
 
@@ -273,113 +307,85 @@ def main():
     assert config["Architecture"]["Head"]["use_parallel"] == False
     assert config["Architecture"]["Head"]["parallel_step"] == 3 # 保持3的原因是因为我篡改了paddle源码，这样保证可以全部读取ppformulanet-S的1029个embed_position的嵌入
 
-    model = build_model(config["Architecture"])
+    print("---load paddle model---")
+    pp_model = build_model(config["Architecture"])
     best_model_dict = load_model(
-        config, model, model_type=config["Architecture"]["model_type"]
+        config, pp_model, model_type=config["Architecture"]["model_type"]
     )
     # delete useless layers in encoder model (I guess it is useful for pretraining)
-    del model.backbone.pphgnet_b4.avg_pool
-    del model.backbone.pphgnet_b4.last_conv
-    del model.backbone.pphgnet_b4.act
-    del model.backbone.pphgnet_b4.dropout
-    del model.backbone.pphgnet_b4.flatten
-    del model.backbone.pphgnet_b4.fc
+    del pp_model.backbone.pphgnet_b4.avg_pool
+    del pp_model.backbone.pphgnet_b4.last_conv
+    del pp_model.backbone.pphgnet_b4.act
+    del pp_model.backbone.pphgnet_b4.dropout
+    del pp_model.backbone.pphgnet_b4.flatten
+    del pp_model.backbone.pphgnet_b4.fc
+
+    pp_model.eval()
 
     # paddle model that needs to be converted from
-    paddle_encoder = model.backbone.pphgnet_b4
-    paddle_decoder = model.head.decoder
+    pp_encoder = pp_model.backbone.pphgnet_b4
+    pp_decoder = pp_model.head.decoder
 
-    from transformers import MBartConfig, MBartForCausalLM
-
-    from ptocr.syntex.formula_net.formulanet import HGNetv2, HGNetv2Config
-    # torch model that needs to be converted to
-    ENCODER_CONFIG = HGNetv2Config(
-        stem_channels=[3, 32, 48],
-        stage_config= {
-            # in_channels, mid_channels, out_channels, num_blocks, downsample, light_block, kernel_size, layer_num
-            "stage1": (48, 48, 128, 1, 6, 3, False, False),
-            "stage2": (128, 96, 512, 1, 6, 3, True, False),
-            "stage3": (512, 192, 1024, 3, 6, 5, True, True),
-            "stage4": (1024, 384, 2048, 1, 6, 5, True, True),
-        },
-        hidden_size= 2048,
-        pretrained_backbone="",
-        freeze_backbone= False,
-    )
-
-    DECODER_CONFIG = MBartConfig(
-        vocab_size=50000,
-        max_position_embeddings=1024+3,
-        d_model=384,
-        decoder_layers=2,
-        decoder_attention_heads=16,
-        decoder_ffn_dim=1536,
-        decoder_start_token_id=0,
-        layer_norm_eps=1e-05,
-        is_decoder=True,
-        scale_embedding=True,
-        tie_word_embeddings=False,
-    )
-
-    torch_encoder = HGNetv2(ENCODER_CONFIG)
-    torch_decoder = MBartForCausalLM(DECODER_CONFIG)
-
-
-    print("summarizing encoder")
-    paddle_stats = paddle.summary(paddle_encoder, (1, 3, 384, 384))
-    paddle_total_params = int(paddle_stats["total_params"])
-    paddle_trainable_params = int(paddle_stats["trainable_params"])
-
-    import torchinfo
-    torch_stats = torchinfo.summary(torch_encoder, (1, 3, 384, 384), device='cpu')
-    torch_total_params = torch_stats.total_params
-    torch_trainable_params = torch_stats.trainable_params
-
-    print(f"{paddle_total_params=}, {paddle_trainable_params=}")
-    print(f"{torch_total_params=}, {torch_trainable_params=}")
-    assert paddle_trainable_params == torch_trainable_params
+    print("\n---summarizing paddle model---")
+    pp_stats = paddle.summary(pp_model, 
+                              input_size=[(1,3,384,384),(1,100),(1,100)],
+                              dtypes=["float32", "int32", "int32"])
+    pp_total_params = int(pp_stats["total_params"])
+    pp_trainable_params = int(pp_stats["trainable_params"])
+    print(f"{pp_total_params=}, {pp_trainable_params=}")
     print("Paddle counts BN running stats as its non_trainable params while torch doesn't count them as params(but buffers)")
 
-    paddle_encoder.eval()
-    torch_encoder.eval()
+    from ptocr.syntex.formula_net.formulanet import load_model
 
-    print("converting encoder")
-    convert_block(paddle_encoder, torch_encoder, 0, verbose=False)
-    diffs = validate_block_params(paddle_encoder, torch_encoder)
+    print("\n---load torch model---")
+    # torch model that needs to be converted to
+    pt_model = load_model()
+    pt_model.eval()
+
+    pt_encoder = pt_model.encoder
+    pt_decoder = pt_model.decoder
+    assert pt_encoder is not None and pt_decoder is not None
+
+    print("\n---summarizing torch model---")
+    import torchinfo
+    pt_stats = torchinfo.summary(pt_model, input_data={'pixel_values': pt_pixel_values, 'decoder_input_ids': pt_decoder_input_ids, 'decoder_attention_mask': pt_decoder_attention_mask}, device='cpu')
+    pt_total_params = pt_stats.total_params
+    pt_trainable_params = pt_stats.trainable_params
+    print(f"{pt_total_params=}, {pt_trainable_params=}")
+
+    assert pp_trainable_params == pt_trainable_params
+
+    print("\n---converting encoder---")
+    convert_block(pp_encoder, pt_encoder, 0, verbose=False)
+    diffs = validate_block_params(pp_encoder, pt_encoder)
     print(f"max absolute difference in params: {max(diffs)}")
 
-    print("validating encoder")
-    input_shape = (16, 3, 384, 384)
-    x = np.random.rand(*input_shape).astype(np.float32)
-    validate_encoder_forward(paddle_encoder, torch_encoder, x)
+    print("\n---validating encoder---")
+    validate_encoder_forward(pp_encoder, pt_encoder, pixel_values)
 
-    from pathlib import Path
-    path = Path(__file__).resolve().parent / "formulanet_encoder.pt"
-    torch.save(torch_encoder.state_dict(),path)
-    print(f"encoder saved to {path}")
-
-    paddle_decoder.eval()
-    torch_decoder.eval()
-
-    print("converting decoder")
-    convert_block(paddle_decoder, torch_decoder, 0, verbose=False)
-    diffs = validate_block_params(paddle_decoder, torch_decoder)
+    print("\n---converting decoder---")
+    convert_block(pp_decoder, pt_decoder, 0, verbose=False)
+    diffs = validate_block_params(pp_decoder, pt_decoder)
     print(f"max absolute difference in params: {max(diffs)}")
 
-    print("validating decoder")
-    input_shape = (16, 100)
-    decoder_input_ids =  np.random.randint(0, 50000, size=input_shape).astype(np.int32)
-    decoder_attention_mask = np.ones(input_shape, dtype=np.int32)
-    encoder_hidden_states = np.random.rand(16, 144, 384).astype(np.float32)
+    print("\n---validating decoder---")
+    validate_decoder_forward(pp_decoder, pt_decoder, [decoder_input_ids, decoder_attention_mask, encoder_hidden_states, None]) #type: ignore
 
-    validate_decoder_forward(paddle_decoder, torch_decoder, [decoder_input_ids, decoder_attention_mask, encoder_hidden_states, None])
+    print("\n---convert projection layer---")
+    convert_layer(pp_model.head.enc_to_dec_proj, pt_model.enc_to_dec_proj)
+    diff = validate_layer_params(pp_model.head.enc_to_dec_proj, pt_model.enc_to_dec_proj)
+    print(f"max absolute difference in params: {diff}")
 
-    path = Path(__file__).resolve().parent / "formulanet_decoder.pt"
-    torch.save(torch_decoder.state_dict(),path)
-    print(f"decoder saved to {path}")
+    print("\n---validating whole model---")
+    validate_whole_model(
+        pp_model,
+        pt_model,
+        [pixel_values, decoder_input_ids, decoder_attention_mask],
+    )
 
-
-
+    path = Path(__file__).resolve().parent / "formulanet.pt"
+    torch.save(pt_model.state_dict(),path)
+    print(f"formulanet saved to {path}")
 
 
 if __name__ == '__main__':
