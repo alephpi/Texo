@@ -214,12 +214,15 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 5. 还有一个粗暴的方法是，比较 MBart tokenizer 和我们的 tokenizer 的区别，把 MBart 中的无用 token 完全删去，然后用 ppformulanet 的 decoder 中的相关权重给我们的 decoder 初始化。
 
 破案了，是 transformers 的 bug https://github.com/huggingface/transformers/issues/40111，但是在修复 shift labels 的 bug 以后，loss 仍然降到 1.0 左右就停滞了。
-尝试了将 `hidden_size` 扩大到 `512,768,1024`，无帮助。将 `decoder_layers` 增加到 `4，8，12` 也没有帮助。
-尝试将 sampling strategy 改为分桶（随机分桶、顺序分桶），尽管确实能加快训练速度（无效 padding 减少），但损失函数和梯度值均发生跳变，最终收敛效果也并不理想（未能超越无分桶的默认策略）。
+- 尝试了将 `hidden_size` 扩大到 `512,768,1024`，无帮助。将 `decoder_layers` 增加到 `4，8，12` 也没有帮助。
+- 尝试将 sampling strategy 改为分桶（随机分桶、顺序分桶），尽管确实能加快训练速度（无效 padding 减少），但损失函数和梯度值均发生跳变，最终收敛效果也并不理想（未能超越无分桶的默认策略）。
 
 准备尝试用 ppformulanet 的 decoder 权重来初始化训练。
 注意 ppformulanet-S 有几项设置需修改，才能具有较小误差：
 1. `is_export`: 这个选项极坑，在源代码中即便设置为 `False`，也会在 `eval` 模式下在 `forward` 函数内被篡改为 `True`。
 2. `use_parallel`: 改为 `False`。在百度原实现中，S 模型是追求加速，故同时并行预测 3 个 token，需关闭，注意到此时序列最长为 1024+2=1026，而非 1024+2+3=1029
 3. `length_aware`: 在百度实现中，S 模型的编码器输出除了进入 decoder 外，在训练时还会进入一个用于预测 token 长度的小 decoder，用辅助损失对编码器进行训练，这可以被视为一种对全局长度信息的短路训练。因为它不影响主 decoder，因此无需更改。
-- [x] 实现 paddle 版本的 mbart decoder 到 transformers 的权重迁移，随机输入前向传播误差小于 8e-3
+- [x] 实现 paddle 版本的 mbart decoder 到 transformers 的权重迁移，随机输入前向传播误差小于 1e-5
+- [x] 实现全模型权重迁移，随机输入前向传播误差小于 3e-5。
+
+- [ ] 蒸馏词表
