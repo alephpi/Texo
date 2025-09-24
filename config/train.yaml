@@ -2,7 +2,7 @@ output_dir: ${hydra:runtime.output_dir}
 
 hydra:
   job:
-    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-decoder_layers=${model.decoder.decoder_layers}-hidden_size=${model.encoder.hidden_size}
+    name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-decoder_layers=${model.decoder.decoder_layers}-hidden_size=${model.decoder.d_model}
   run:
     dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
@@ -44,10 +44,9 @@ model:
     tie_word_embeddings: false
 
 training:
-  max_epochs: 50
   lr_scheduler:
     min_lr: 1e-8
-    num_training_steps: 3e5
+    num_training_steps: ${trainer.max_steps}
     num_warmup_steps: 5e3
   optimizer:
     lr: 1e-4
@@ -89,7 +88,7 @@ trainer:
   num_nodes: 1
   precision: bf16-mixed
   log_every_n_steps: 50
-  max_epochs: 10
+  max_steps: 3e5
   val_check_interval: 1000
   profiler: null
   # gradient_clip_val: 2.0
