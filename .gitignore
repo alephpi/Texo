@@ -209,5 +209,4 @@ node_modules/
 outputs
 !.gitkeep
 !convert.log
-*.json
 *.pt
