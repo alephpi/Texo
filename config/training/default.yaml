@@ -1,0 +1,9 @@
+lr_scheduler:
+  min_lr: 1e-8
+  num_training_steps: 5e5
+  num_warmup_steps: 5e3
+optimizer:
+  lr: 1e-4
+  betas: [0.9, 0.999]
+  weight_decay: 0.05
+resume_from_ckpt: null

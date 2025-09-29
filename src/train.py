@@ -19,7 +19,7 @@ def main(cfg: DictConfig):
     OmegaConf.set_struct(cfg.model, False)
     OmegaConf.set_struct(cfg.training, False)
 
-    model = FormulaNetLit(cfg.tokenizer_path, cfg.model, cfg.training)
+    model = FormulaNetLit( cfg.model, cfg.training)
     logging.log(logging.INFO, f"Model initialized.")
 
     datamodule = MERDataModule(data_config=cfg.data)

@@ -1,0 +1,24 @@
+train_dataset_path: ./data/dataset/hf_dataset
+eval_image_dir: ./data/dataset/UniMER-Test/cpe
+eval_text_path: ./data/dataset/UniMER-Test/cpe.txt
+test_image_dir: ${data.eval_image_dir}
+test_text_path: ${data.eval_text_path}
+image_processor:
+  image_size:
+    width: 384
+    height: 384
+text_processor:
+  tokenizer_path: ${model.tokenizer_path}
+  tokenizer_config:
+    add_special_tokens: true
+    max_length: 1024
+    padding: longest
+    truncation: true
+    return_tensors: pt
+    return_attention_mask: true
+    pad_to_multiple_of: 8
+train_batch_size: 64
+val_batch_size: 64
+test_batch_size: 8
+num_workers: 10
+sampling_strategy: null

@@ -230,10 +230,10 @@ class HGNetv2(PreTrainedModel):
             state_dict = torch.load(config.pretrained)
             self.load_state_dict(state_dict)
 
-            if config.freeze:
-                logging.log(logging.INFO, "freeze model weight")
-                self._freeze_norm(self)
-                self._freeze_parameters(self)
+        if config.freeze:
+            logging.log(logging.INFO, "freeze model weight")
+            self._freeze_norm(self)
+            self._freeze_parameters(self)
 
 
     def forward(self, pixel_values, **kwargs):
