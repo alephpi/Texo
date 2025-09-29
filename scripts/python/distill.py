@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+from re import sub
 from typing import List, Set
 
 import numpy as np
@@ -14,7 +15,7 @@ from transformers import AutoTokenizer, PreTrainedTokenizerFast
 def filter_unused_tokens(
     texts: List[str],
     tokenizer: PreTrainedTokenizerFast,
-    batch_size: int = 16,
+    batch_size: int = 1,
     max_length: int = 4096,
 ) -> tuple[Set[int], Set[int]]:
     total_samples = len(texts)
@@ -47,13 +48,13 @@ def filter_unused_tokens(
 
     # 计算未使用的tokens（假设vocab_size=50000）
     all_tokens = set(range(50000))
-    unused_tokens = all_tokens - all_used_token_ids
+    unused_token_ids = all_tokens - all_used_token_ids
 
     print(
-        f"处理完成！使用了{len(all_used_token_ids)}个不同的token，未使用{len(unused_tokens)}个token"
+        f"处理完成！使用了{len(all_used_token_ids)}个不同的token，未使用{len(unused_token_ids)}个token"
     )
 
-    return all_used_token_ids, unused_tokens
+    return all_used_token_ids, unused_token_ids
 
 def read_keep_tokens(path: str) -> set[str]:
     with open(path, "r", encoding="utf-8") as f:
@@ -117,14 +118,19 @@ def filter_merges_to_subset(merges: list[tuple[str,str]], keep: set[str]):
             filtered.append(merge)
     return filtered
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--base", required=True, help="HF repo id or local path")
-    ap.add_argument("--keep_file", required=True, help="file with tokens to keep, one per line")
-    ap.add_argument("--out_dir", required=True)
-    ap.add_argument("--keep_bytes", type=int, default=0, help="0 to disable; 256 for byte-level BPEs")
-    args = ap.parse_args()
+def subset(args, unk_args):
+    with open(args.corpus, "r", encoding="utf-8") as f:
+        texts = [sentence.strip() for sentence in f.readlines()]
+    
+    tokenizer = AutoTokenizer.from_pretrained(args.base, use_fast=True)
+    all_used_token_ids, _ = filter_unused_tokens(texts, tokenizer)
+    all_used_token_ids.update(tokenizer.all_special_ids)
+    all_used_tokens = set(tokenizer.convert_ids_to_tokens(all_used_token_ids))
+    with open(os.path.join(args.keep_file), "w", encoding="utf-8") as f:
+        for token in sorted(all_used_tokens):
+            print(token, file=f)
 
+def distill(args, unk_args):
     hf_tok, backend = load_backends(args.base)
     vocab_tok2id, merges, tokjson = parse_vocab_merges(backend)
 
@@ -140,15 +146,6 @@ def main():
 
     # 2) filter merges consistently
     filtered_merges = filter_merges_to_subset(merges, keep)
-    # remove potential repetitive merges
-    # seen = set()
-    # filtered_merges = []
-    # for pair in filtered_merges_raw:
-    #     if pair not in seen:
-    #         filtered_merges.append(pair)
-    #         seen.add(pair)
-    #     else:
-    #         print(f"重复的 merge: {pair}")
 
     # 3) reindex by original id order for determinism
     kept_tokens_sorted = [t for t,_ in sorted(((t, vocab_tok2id[t]) for t in keep), key=lambda x: x[1])]
@@ -165,17 +162,66 @@ def main():
     if keep_specials:
         new_tok.add_special_tokens(list(keep_specials & set(new_vocab_tok2id.keys())))
 
-    os.makedirs(args.out_dir, exist_ok=True)
-    out_tok = os.path.join(args.out_dir, "tokenizer.json")
+    os.makedirs(args.distill, exist_ok=True)
+    out_tok = os.path.join(args.distill, "tokenizer.json")
     new_tok.save(out_tok)
 
     # Save old->new id map to drive weight remap
     old2new = {vocab_tok2id[t]: new_vocab_tok2id[t] for t in kept_tokens_sorted}
-    with open(os.path.join(args.out_dir, "old_to_new_id.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(args.distill, "old_to_new_id.json"), "w", encoding="utf-8") as f:
         json.dump(old2new, f, ensure_ascii=False, indent=2)
 
     print(f"[OK] Saved {out_tok}  | vocab={len(new_vocab_tok2id)} merges={len(filtered_merges)}")
     print("[OK] Saved old_to_new_id.json for embedding remap")
+
+def verify(args, unk_args):
+    tokenizer_base = PreTrainedTokenizerFast.from_pretrained(args.base)
+    tokenizer_distill = PreTrainedTokenizerFast.from_pretrained(args.distill)
+    old_to_new_id = json.load(open(os.path.join(args.distill, "old_to_new_id.json"), "r"))
+    old_to_new_id = {int(k):v for k,v in old_to_new_id.items()}
+    with open(args.corpus, "r", encoding="utf-8") as f:
+        texts = [sentence.strip() for sentence in f.readlines()]
+
+    for text in tqdm(texts):
+        encoded_ids_base = tokenizer_base(text, max_length=4096, truncation=True)
+        encoded_ids_distill = tokenizer_distill(text, max_length=4096, truncation=True)
+        assert len(encoded_ids_base["input_ids"]) == len(encoded_ids_distill["input_ids"])
+        for encoded_id_base, encoded_id_distill in zip(
+            encoded_ids_base["input_ids"], encoded_ids_distill["input_ids"]
+        ):
+            assert old_to_new_id[encoded_id_base] == encoded_id_distill, (
+                f"tokenization is not consistent for {text}\n{encoded_ids_base}\n{encoded_ids_distill}"
+            )
+    print("[OK] Validated.")
+    return True
+
+def main():
+    parser = argparse.ArgumentParser()
+    sub_parsers = parser.add_subparsers()
+    sub_parser = sub_parsers.add_parser("subset", help="Subset a tokenizer's useful vocab based on a corpus")
+    sub_parser.add_argument("--corpus", type=str, required=True, help="text corpus, one sentence per line")
+    sub_parser.add_argument("--base", type=str, required=True, help="HF repo id or local path for the base tokenizer")
+    sub_parser.add_argument("--keep_file", type=str, required=True, help="file of the subset that needs to be kept in the vocab, one per line")
+    sub_parser.set_defaults(func=subset)
+
+    sub_parser = sub_parsers.add_parser("distill", help="Distill a tokenizer's vocab and merges to a smaller subset based on the keep file")
+    sub_parser.add_argument("--base", required=True, help="HF repo id or local path of the base tokenizer")
+    sub_parser.add_argument("--distill", required=True, help="output directory for the distilled tokenizer")
+    sub_parser.add_argument("--keep_file", required=True, help="file with tokens to keep, one per line")
+    sub_parser.add_argument("--keep_bytes", type=int, default=279, help="0 to disable; 256 for byte-level BPEs, 279 for Nougat tokenizer since it uses 23 special tokens before the byte tokens")
+    sub_parser.set_defaults(func=distill)
+
+    sub_parser = sub_parsers.add_parser("verify", help="Verify the tokenization consistency of the distilled tokenizer with the original one on the corpus")
+    sub_parser.add_argument("--base", required=True, help="HF repo id or local path")
+    sub_parser.add_argument("--distill", required=True, help="output directory for the distilled tokenizer")
+    sub_parser.add_argument("--corpus", type=str, required=True, help="text corpus, one sentence per line")
+    sub_parser.set_defaults(func=verify)
+
+    args, unk_args = parser.parse_known_args()
+    if hasattr(args, "func"):
+        args.func(args, unk_args)
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
