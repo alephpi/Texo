@@ -1,0 +1,7 @@
+defaults:
+  - global
+  - hydra: default
+  - model: formulanet-S-distill
+  - data: UniMER-1M
+  - training: default
+  - trainer: default

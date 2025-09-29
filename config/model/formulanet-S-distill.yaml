@@ -1,0 +1,9 @@
+# gently distilled from unimernet tokenizer
+defaults:
+  - formulanet-S
+  - _self_
+
+tokenizer_path: ./data/unimernet_tokenizer_distill
+decoder:
+  vocab_size: 1264
+pretrained: ./src/syntex/model/formulanet_distill.pt

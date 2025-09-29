@@ -2,14 +2,18 @@
 import argparse
 import json
 import os
-from re import sub
+from re import S
 from typing import List, Set
 
 import numpy as np
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tqdm import tqdm
-from transformers import AutoTokenizer, PreTrainedTokenizerFast
+from transformers import (
+    AutoTokenizer,
+    MBartForCausalLM,
+    PreTrainedTokenizerFast,
+)
 
 
 def filter_unused_tokens(
@@ -80,8 +84,6 @@ def collect_specials(hf_tok: PreTrainedTokenizerFast) -> list[str]:
     # Stable source of specials:
     # https://huggingface.co/docs/transformers/en/main_classes/tokenizer
     all_special_tokens = list(hf_tok.all_special_tokens)
-    # print(all_special_tokens)
-    # print(hf_tok.added_tokens_decoder)
     print(list(hf_tok.get_added_vocab().keys()))
     return all_special_tokens
 
@@ -118,7 +120,7 @@ def filter_merges_to_subset(merges: list[tuple[str,str]], keep: set[str]):
             filtered.append(merge)
     return filtered
 
-def subset(args, unk_args):
+def distill_vocab(args, unk_args):
     with open(args.corpus, "r", encoding="utf-8") as f:
         texts = [sentence.strip() for sentence in f.readlines()]
     
@@ -130,7 +132,7 @@ def subset(args, unk_args):
         for token in sorted(all_used_tokens):
             print(token, file=f)
 
-def distill(args, unk_args):
+def distill_tokenizer(args, unk_args):
     hf_tok, backend = load_backends(args.base)
     vocab_tok2id, merges, tokjson = parse_vocab_merges(backend)
 
@@ -164,7 +166,19 @@ def distill(args, unk_args):
 
     os.makedirs(args.distill, exist_ok=True)
     out_tok = os.path.join(args.distill, "tokenizer.json")
-    new_tok.save(out_tok)
+    # new_tok.save(out_tok)
+
+    # save as transformers tokenizer
+    new_tok = PreTrainedTokenizerFast(tokenizer_object=new_tok)
+    special_tokens_dict = {
+        'bos_token': '<s>',
+        'eos_token': '</s>',
+        'pad_token': '<pad>',
+        'unk_token': '<unk>'
+    }
+    # tokenizers 只处理底层 tokenizer 的逻辑，格式化 token 的在训练和推理时的语义，如 bos_token 等，在 transformers 的 api 中定义。
+    new_tok.add_special_tokens(special_tokens_dict)
+    new_tok.save_pretrained(args.distill)
 
     # Save old->new id map to drive weight remap
     old2new = {vocab_tok2id[t]: new_vocab_tok2id[t] for t in kept_tokens_sorted}
@@ -175,6 +189,7 @@ def distill(args, unk_args):
     print("[OK] Saved old_to_new_id.json for embedding remap")
 
 def verify(args, unk_args):
+    from transformers import PreTrainedTokenizerFast
     tokenizer_base = PreTrainedTokenizerFast.from_pretrained(args.base)
     tokenizer_distill = PreTrainedTokenizerFast.from_pretrained(args.distill)
     old_to_new_id = json.load(open(os.path.join(args.distill, "old_to_new_id.json"), "r"))
@@ -195,27 +210,73 @@ def verify(args, unk_args):
     print("[OK] Validated.")
     return True
 
+def distill_weight(args, unk_args):
+    import torch
+    import torch.nn as nn
+    from omegaconf import OmegaConf as oc
+
+    from syntex.model.formulanet import FormulaNet
+    base_config = oc.load(args.config)
+    oc.resolve(base_config)
+
+    model: MBartForCausalLM = FormulaNet(base_config)
+    decoder = model.decoder
+    assert decoder is not None
+    assert base_config.pretrained is not None, "base model config must have a pretrained checkpoint"
+    base_ckpt_path = base_config.pretrained
+    distill_ckpt_path = base_ckpt_path.replace(".pt", "_distill.pt")
+    distill_config = args.config.replace(".yaml", "_distill.yaml")
+    with open(args.map, "r", encoding="utf-8") as f:
+        old_to_new_id = json.load(f)
+    old_to_new_id = {int(k):v for k,v in old_to_new_id.items()}
+    keep_old_ids = [old for old, new in sorted(old_to_new_id.items(), key=lambda item: item[1])]
+    new_vocab_size = len(old_to_new_id)
+    print(new_vocab_size)
+
+    # resize and remap the weights in embed_tokens and lm_head
+    old_emb: nn.Embedding = decoder.get_input_embeddings()
+    new_emb = nn.Embedding(new_vocab_size, old_emb.embedding_dim)
+    new_emb.weight.data = old_emb.weight.data[keep_old_ids]
+    decoder.set_input_embeddings(new_emb)
+
+    # 修改输出lm head
+    old_head: nn.Linear = decoder.get_output_embeddings()
+    new_head = nn.Linear(old_head.in_features, new_vocab_size, bias=False)
+    new_head.weight.data = old_head.weight.data[keep_old_ids]
+    decoder.set_output_embeddings(new_head)
+    # print(model)
+    torch.save(model.state_dict(), distill_ckpt_path)
+
+    import torchinfo
+    torchinfo.summary(model)
+
 def main():
     parser = argparse.ArgumentParser()
     sub_parsers = parser.add_subparsers()
-    sub_parser = sub_parsers.add_parser("subset", help="Subset a tokenizer's useful vocab based on a corpus")
+    sub_parser = sub_parsers.add_parser("vocab", help="Subset a tokenizer's useful vocab based on a corpus")
     sub_parser.add_argument("--corpus", type=str, required=True, help="text corpus, one sentence per line")
     sub_parser.add_argument("--base", type=str, required=True, help="HF repo id or local path for the base tokenizer")
     sub_parser.add_argument("--keep_file", type=str, required=True, help="file of the subset that needs to be kept in the vocab, one per line")
-    sub_parser.set_defaults(func=subset)
+    sub_parser.set_defaults(func=distill_vocab)
 
-    sub_parser = sub_parsers.add_parser("distill", help="Distill a tokenizer's vocab and merges to a smaller subset based on the keep file")
+    sub_parser = sub_parsers.add_parser("tokenizer", help="Distill a tokenizer's vocab and merges to a smaller subset based on the keep file")
     sub_parser.add_argument("--base", required=True, help="HF repo id or local path of the base tokenizer")
     sub_parser.add_argument("--distill", required=True, help="output directory for the distilled tokenizer")
     sub_parser.add_argument("--keep_file", required=True, help="file with tokens to keep, one per line")
     sub_parser.add_argument("--keep_bytes", type=int, default=279, help="0 to disable; 256 for byte-level BPEs, 279 for Nougat tokenizer since it uses 23 special tokens before the byte tokens")
-    sub_parser.set_defaults(func=distill)
+    sub_parser.set_defaults(func=distill_tokenizer)
 
     sub_parser = sub_parsers.add_parser("verify", help="Verify the tokenization consistency of the distilled tokenizer with the original one on the corpus")
     sub_parser.add_argument("--base", required=True, help="HF repo id or local path")
     sub_parser.add_argument("--distill", required=True, help="output directory for the distilled tokenizer")
     sub_parser.add_argument("--corpus", type=str, required=True, help="text corpus, one sentence per line")
     sub_parser.set_defaults(func=verify)
+
+    sub_parser = sub_parsers.add_parser("weight", help="Verify the tokenization consistency of the distilled tokenizer with the original one on the corpus")
+    sub_parser.add_argument("--config", required=True, help="base model config path")
+    sub_parser.add_argument("--map", type=str, required=True, help="json file mapping old token ids to new token ids for weight remapping")
+    sub_parser.set_defaults(func=distill_weight)
+
 
     args, unk_args = parser.parse_known_args()
     if hasattr(args, "func"):
