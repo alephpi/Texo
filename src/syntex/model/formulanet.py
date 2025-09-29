@@ -1,3 +1,4 @@
+import torch
 from transformers import VisionEncoderDecoderConfig, VisionEncoderDecoderModel
 
 from ..utils.config import OmegaConf
