@@ -1,9 +1,9 @@
 defaults:
   - global
   - hydra: default
-  - model: formulanet-S-distill
+  - model: formulanet-S-distill-transfer
   - data: UniMER-1M
-  - training: finetune_distill
+  - training: finetune_distill_transfer
   - trainer: default
 
 trainer:

@@ -1,5 +1,5 @@
 job:
-  name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-decoder_layers=${model.decoder.decoder_layers}-hidden_size=${model.decoder.d_model}
+  name: bs=${data.train_batch_size}-lr=${training.optimizer.lr}-freeze=${model.encoder.freeze}
 run:
   dir: outputs/${hydra.job.name}/${now:%Y-%m-%d_%H-%M-%S}
 sweep:

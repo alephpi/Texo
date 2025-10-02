@@ -1,5 +1,5 @@
 defaults:
-  - train_distill
+  - train_distill_transfer
   - override hydra/launcher: submitit_slurm
   - _self_
 

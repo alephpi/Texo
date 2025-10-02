@@ -1,5 +1,5 @@
-# gently distilled from unimernet tokenizer
-tokenizer_path: ./data/unimernet_tokenizer_distill
+# aggresively distilled from unimernet tokenizer
+tokenizer_path: ./data/tokenizer
 encoder:
   model_type: my_hgnetv2
   stem_channels: [3, 32, 48]
@@ -10,10 +10,10 @@ encoder:
     stage4: [1024, 384, 2048, 1, 6, 5, true, true]
   hidden_size: 2048
   pretrained: ""
-  freeze: false
+  freeze: true
 decoder:
   model_type: mbart
-  vocab_size: 1264
+  vocab_size: 687
   max_position_embeddings: 1027
   d_model: 384
   decoder_layers: 2
@@ -30,5 +30,4 @@ decoder:
   add_cross_attention: true
   scale_embedding: true
   tie_word_embeddings: false
-# pretrained: ./src/syntex/model/formulanet_distill.pt (start ckpt)
-pretrained: ./src/syntex/model/formulanet_distill_best.pt # (end ckpt)
+pretrained: ./src/syntex/model/formulanet_distill_best_transfer.pt
