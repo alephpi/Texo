@@ -2,7 +2,6 @@
 import argparse
 import json
 import os
-from re import S
 from typing import List, Set
 
 import numpy as np
@@ -260,21 +259,23 @@ def distill_vocab_transfer(args, unk_args):
     base_config = oc.load(args.config)
     oc.resolve(base_config)
 
-    base_tokenizer = PreTrainedTokenizerFast.from_pretrained(args.tokenizer)
+    base_tokenizer = PreTrainedTokenizerFast.from_pretrained(base_config["tokenizer_path"])
+    assert isinstance(base_tokenizer, PreTrainedTokenizerFast)
     model: MBartForCausalLM = FormulaNet(base_config)
     decoder = model.decoder
     assert decoder is not None
     assert base_config.pretrained is not None, "base model config must have a pretrained checkpoint"
     base_ckpt_path = base_config.pretrained
-    distill_ckpt_path = base_ckpt_path.replace(".pt", "_distill2.pt")
+    distill_ckpt_path = base_ckpt_path.replace(".pt", "_transfer.pt")
     
     target_tokenizer = PreTrainedTokenizerFast.from_pretrained(args.distill)
     new_vocab_size = len(target_tokenizer.vocab)
+    print(new_vocab_size)
 
     # VIPI
     merge_token_mapping = {}
     for token in target_tokenizer.vocab:
-        tokenized_ids = base_tokenizer(token)
+        tokenized_ids = base_tokenizer.encode(token, add_special_tokens=False)
         id = target_tokenizer.convert_tokens_to_ids(token)
         merge_token_mapping[id] = tokenized_ids
 
@@ -330,7 +331,6 @@ def main():
 
     sub_parser = sub_parsers.add_parser("transfer", help="distill model by merge tokens weight")
     sub_parser.add_argument("--config", required=True, help="base model config path")
-    sub_parser.add_argument("--tokenizer", required=True, help="base tokenizer path")
     sub_parser.add_argument("--distill", required=True, help="the tokenizer path with target vocab")
     sub_parser.set_defaults(func=distill_vocab_transfer)
 
@@ -341,4 +341,11 @@ def main():
         parser.print_help()
 
 if __name__ == "__main__":
+    import debugpy
+    try:
+        debugpy.listen(('localhost', 9501))
+        print('Waiting for debugger attach')
+        debugpy.wait_for_client()
+    except Exception as e:
+        pass
     main()
