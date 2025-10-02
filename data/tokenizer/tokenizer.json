@@ -5,24 +5,6 @@
   "added_tokens": [
     {
       "id": 0,
-      "content": "<pad>",
-      "single_word": false,
-      "lstrip": false,
-      "rstrip": false,
-      "normalized": false,
-      "special": true
-    },
-    {
-      "id": 1,
-      "content": "<unk>",
-      "single_word": false,
-      "lstrip": false,
-      "rstrip": false,
-      "normalized": false,
-      "special": true
-    },
-    {
-      "id": 2,
       "content": "<s>",
       "single_word": false,
       "lstrip": false,
@@ -31,8 +13,26 @@
       "special": true
     },
     {
-      "id": 3,
+      "id": 1,
+      "content": "<pad>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    },
+    {
+      "id": 2,
       "content": "</s>",
+      "single_word": false,
+      "lstrip": false,
+      "rstrip": false,
+      "normalized": false,
+      "special": true
+    },
+    {
+      "id": 3,
+      "content": "<unk>",
       "single_word": false,
       "lstrip": false,
       "rstrip": false,
@@ -84,7 +84,7 @@
       "</s>": {
         "id": "</s>",
         "ids": [
-          3
+          2
         ],
         "tokens": [
           "</s>"
@@ -93,7 +93,7 @@
       "<s>": {
         "id": "<s>",
         "ids": [
-          2
+          0
         ],
         "tokens": [
           "<s>"
@@ -105,10 +105,10 @@
   "model": {
     "type": "WordLevel",
     "vocab": {
-      "<pad>": 0,
-      "<unk>": 1,
-      "<s>": 2,
-      "</s>": 3,
+      "<s>": 0,
+      "<pad>": 1,
+      "</s>": 2,
+      "<unk>": 3,
       "!": 4,
       "\"": 5,
       "&": 6,

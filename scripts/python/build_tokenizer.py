@@ -1,5 +1,3 @@
-from unittest import skip
-
 from tokenizers import Tokenizer, models, processors
 from tokenizers.pre_tokenizers import WhitespaceSplit
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
@@ -15,12 +13,12 @@ def build_tokenizer(vocab_path, output_dir):
     """
     with open(vocab_path, 'r', encoding='utf-8') as f:
         vocab = [l.strip('\n') for l in f.readlines()]
-    special_tokens = ['<pad>','<unk>','<s>','</s>']
+    special_tokens = ['<s>','<pad>','</s>','<unk>']
     vocab = special_tokens + vocab
     vocab = {token: idx for idx, token in enumerate(vocab)}
     tokenizer = Tokenizer(models.WordLevel(vocab, unk_token="<unk>"))
     tokenizer.pre_tokenizer = WhitespaceSplit()
-    tokenizer.decoder = None # 禁用解码器，默认用空格连接
+    # tokenizer.decoder = None # 禁用解码器，默认用空格连接
     tokenizer.post_processor = processors.TemplateProcessing(
         single="<s> $A </s>",
         special_tokens=[
