@@ -14,10 +14,10 @@ profiler: null
 callbacks:
   - _target_: lightning.pytorch.callbacks.ModelCheckpoint
     filename: "{step}-{val_loss:.4e}-{BLEU:.4f}-{edit_distance:.4f}"
-    save_top_k: 10
+    save_top_k: 20
     save_last: true
-    monitor: "val_loss"
-    mode: "min"
+    monitor: "BLEU"
+    mode: "max"
     every_n_epochs: 1
 
   - _target_: lightning.pytorch.callbacks.RichModelSummary

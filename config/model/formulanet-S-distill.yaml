@@ -1,9 +1,33 @@
 # gently distilled from unimernet tokenizer
-defaults:
-  - formulanet-S
-  - _self_
-
 tokenizer_path: ./data/unimernet_tokenizer_distill
+encoder:
+  model_type: my_hgnetv2
+  stem_channels: [3, 32, 48]
+  stage_config:
+    stage1: [48, 48, 128, 1, 6, 3, false, false]
+    stage2: [128, 96, 512, 1, 6, 3, true, false]
+    stage3: [512, 192, 1024, 3, 6, 5, true, true]
+    stage4: [1024, 384, 2048, 1, 6, 5, true, true]
+  hidden_size: 2048
+  pretrained: ""
+  freeze: false
 decoder:
+  model_type: mbart
   vocab_size: 1264
+  max_position_embeddings: 1027
+  d_model: 384
+  decoder_layers: 2
+  decoder_attention_heads: 16
+  decoder_ffn_dim: 1536
+  bos_token_id: 0
+  pad_token_id: 1
+  eos_token_id: 2
+  decoder_start_token_id: 0
+  forced_eos_token_id: 2
+  layer_norm_eps: 1e-5
+  is_decoder: true
+  is_encoder_decoder: false
+  add_cross_attention: true
+  scale_embedding: true
+  tie_word_embeddings: false
 pretrained: ./src/syntex/model/formulanet_distill.pt

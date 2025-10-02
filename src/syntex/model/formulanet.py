@@ -8,13 +8,19 @@ class FormulaNet(VisionEncoderDecoderModel):
     def __init__(self, config):
         super().__init__(VisionEncoderDecoderConfig(**config))
         if config.pretrained:
-            state_dict = torch.load(config.pretrained, map_location=self.device)
-            self.load_state_dict(state_dict, strict=True)
+            self.from_pretrained(config.pretrained)
+
+    def from_pretrained(self, ckpt_path):
+        state_dict = torch.load(ckpt_path, map_location=self.device)
+        self.load_state_dict(state_dict, strict=True)
         # transformers.VisionEncoderDecoderModel is not smart enough to
         # initialize the model.config manually as the following.
         self.config.decoder_start_token_id = self.decoder.config.bos_token_id
         self.config.pad_token_id = self.decoder.config.pad_token_id
         self.config.eos_token_id = self.decoder.config.eos_token_id
+
+
+
 
 @hydra.main(version_base="1.3.2",config_path="../../../config", config_name="train.yaml")
 def main(cfg):

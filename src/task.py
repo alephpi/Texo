@@ -57,18 +57,14 @@ class FormulaNetLit(LightningModule):
     def training_step(self, batch, batch_idx):
         loss = self.model_step(batch, batch_idx)
         self.log("train_loss", loss, on_step=True, on_epoch=False, logger=True)
-        self.log("seq_len", batch["labels"].size(-1), on_step=True, on_epoch=False, logger=True)
+        # self.log("seq_len", batch["labels"].size(-1), on_step=True, on_epoch=False, logger=True)
         return loss
     
     def validation_step(self, batch, batch_idx):
-        if not self.trainer.fit_loop.epoch_loop.done:
-            loss = self.model_step(batch, batch_idx)
-            self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
-        
-        else:
-            self.score_step(batch, batch_idx)
-
-    def score_step(self, batch, batch_idx):
+        loss = self.model_step(batch, batch_idx)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, logger=True)
+    
+        # compute BLEU and edit distance
         labels = batch["labels"]
         labels[labels == -100] = self.model.config.pad_token_id
         ref_str = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
@@ -82,7 +78,6 @@ class FormulaNetLit(LightningModule):
 
         self.log("BLEU", bleu, on_step=False, on_epoch=True, logger=True)
         self.log("edit_distance", edit_distance, on_step=False, on_epoch=True, logger=True)
-        return
     
     # def on_before_optimizer_step(self, optimizer: Optimizer) -> None:
     #     # log gradient norms

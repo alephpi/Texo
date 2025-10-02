@@ -3,5 +3,8 @@ defaults:
   - hydra: default
   - model: formulanet-S-distill
   - data: UniMER-1M
-  - training: default
+  - training: finetune
   - trainer: default
+
+trainer:
+  val_check_interval: 100
