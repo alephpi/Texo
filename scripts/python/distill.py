@@ -225,7 +225,6 @@ def distill_weight(args, unk_args):
     assert base_config.pretrained is not None, "base model config must have a pretrained checkpoint"
     base_ckpt_path = base_config.pretrained
     distill_ckpt_path = base_ckpt_path.replace(".pt", "_distill.pt")
-    distill_config = args.config.replace(".yaml", "_distill.yaml")
     with open(args.map, "r", encoding="utf-8") as f:
         old_to_new_id = json.load(f)
     old_to_new_id = {int(k):v for k,v in old_to_new_id.items()}
@@ -250,6 +249,58 @@ def distill_weight(args, unk_args):
     import torchinfo
     torchinfo.summary(model)
 
+def distill_vocab_transfer(args, unk_args):
+    """ see Vocab Transfer paper
+    """
+    import torch
+    import torch.nn as nn
+    from omegaconf import OmegaConf as oc
+
+    from syntex.model.formulanet import FormulaNet
+    base_config = oc.load(args.config)
+    oc.resolve(base_config)
+
+    base_tokenizer = PreTrainedTokenizerFast.from_pretrained(args.tokenizer)
+    model: MBartForCausalLM = FormulaNet(base_config)
+    decoder = model.decoder
+    assert decoder is not None
+    assert base_config.pretrained is not None, "base model config must have a pretrained checkpoint"
+    base_ckpt_path = base_config.pretrained
+    distill_ckpt_path = base_ckpt_path.replace(".pt", "_distill2.pt")
+    
+    target_tokenizer = PreTrainedTokenizerFast.from_pretrained(args.distill)
+    new_vocab_size = len(target_tokenizer.vocab)
+
+    # VIPI
+    merge_token_mapping = {}
+    for token in target_tokenizer.vocab:
+        tokenized_ids = base_tokenizer(token)
+        id = target_tokenizer.convert_tokens_to_ids(token)
+        merge_token_mapping[id] = tokenized_ids
+
+    # resize and remap the weights in embed_tokens and lm_head
+    old_emb: nn.Embedding = decoder.get_input_embeddings()
+    new_emb = nn.Embedding(new_vocab_size, old_emb.embedding_dim)
+    for id, tokenized_ids in merge_token_mapping.items():
+        new_emb.weight.data[id] = torch.mean(old_emb.weight.data[sorted(tokenized_ids)], dim=0)
+
+    decoder.set_input_embeddings(new_emb)
+
+    # 修改输出lm head
+    old_head: nn.Linear = decoder.get_output_embeddings()
+    new_head = nn.Linear(old_head.in_features, new_vocab_size, bias=False)
+    for id, tokenized_ids in merge_token_mapping.items():
+        new_head.weight.data[id] = torch.mean(old_head.weight.data[sorted(tokenized_ids)], dim=0)
+    
+    decoder.set_output_embeddings(new_head)
+    # print(model)
+    torch.save(model.state_dict(), distill_ckpt_path)
+
+    import torchinfo
+    torchinfo.summary(model)
+
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub_parsers = parser.add_subparsers()
@@ -267,16 +318,21 @@ def main():
     sub_parser.set_defaults(func=distill_tokenizer)
 
     sub_parser = sub_parsers.add_parser("verify", help="Verify the tokenization consistency of the distilled tokenizer with the original one on the corpus")
-    sub_parser.add_argument("--base", required=True, help="HF repo id or local path")
+    sub_parser.add_argument("--base", required=True, help="HF repo id or local path of the base tokenizer")
     sub_parser.add_argument("--distill", required=True, help="output directory for the distilled tokenizer")
     sub_parser.add_argument("--corpus", type=str, required=True, help="text corpus, one sentence per line")
     sub_parser.set_defaults(func=verify)
 
-    sub_parser = sub_parsers.add_parser("weight", help="Verify the tokenization consistency of the distilled tokenizer with the original one on the corpus")
+    sub_parser = sub_parsers.add_parser("weight", help="distill model by remove unused tokens and remap weights")
     sub_parser.add_argument("--config", required=True, help="base model config path")
     sub_parser.add_argument("--map", type=str, required=True, help="json file mapping old token ids to new token ids for weight remapping")
     sub_parser.set_defaults(func=distill_weight)
 
+    sub_parser = sub_parsers.add_parser("transfer", help="distill model by merge tokens weight")
+    sub_parser.add_argument("--config", required=True, help="base model config path")
+    sub_parser.add_argument("--tokenizer", required=True, help="base tokenizer path")
+    sub_parser.add_argument("--distill", required=True, help="the tokenizer path with target vocab")
+    sub_parser.set_defaults(func=distill_vocab_transfer)
 
     args, unk_args = parser.parse_known_args()
     if hasattr(args, "func"):
