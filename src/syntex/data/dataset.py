@@ -112,10 +112,7 @@ class MERDatasetHF(Dataset):
         res = self.text_processor(texts)
         input_ids: torch.Tensor = res["input_ids"] #type: ignore
         attention_mask = res["attention_mask"]
-        # NOTE Unlike many seq2seq models tutorials, we don't apply token shift for labels
-        # i.e. we keep the first token as the start token, since MBart decoder compute loss without token shift, see https://github.com/huggingface/transformers/issues/10480
-        # also by careful debugging, we found the output.logits of MBartForCausalLM is aligned with the decoder_input_ids, not the shifted label
-        # shift to left
+        # labels is input_ids shifted to the left, we don't use the default behavior of transformers as it is somehow complicated
         labels = input_ids.new_zeros(input_ids.shape)
         labels[:, :-1] = input_ids[:, 1:].clone()
         labels[:, -1] = self.pad_token_id
