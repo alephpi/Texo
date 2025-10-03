@@ -97,12 +97,12 @@ In conclusion, we choose the PP-FormulaNet as our architecture, which has the be
   - [x] text preprocessing
   - [x] dataset
   - [x] dataloader
-    - [ ] sequence bucket?
+    - [x] sequence bucket sampling strategy (less padding however leading to really flutuated loss curve)
   - [x] trainer
-    - TODO: check the largest possible batch size
+    - TODO: check the largest possible batch size For AdamW 64 is ok, no more help to enlarge it both in terms of performance or efficiency due to the pre-processing throughput bottleneck.
   - [x] torch-lightning
   - [x] hydra
-  - [ ] cluster running
+  - [x] cluster running
 
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
@@ -225,4 +225,14 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 - [x] 实现 paddle 版本的 mbart decoder 到 transformers 的权重迁移，随机输入前向传播误差小于 1e-5
 - [x] 实现全模型权重迁移，随机输入前向传播误差小于 3e-5。
 
-- [ ] 蒸馏词表
+- [ ] 蒸馏词表：
+  通过缩小词表来达成模型压缩的方法有两种：
+  - 其一是较为温和的，即采用原分词器（NougatTokenizer），仅仅将训练语料中未使用的词元删除，同时删除其在 embedding 和 lm_head 层对应的权重。这种蒸馏使得模型严格缩小而序列长度保持不变。
+    - [x] BPE 分词器蒸馏
+    - [x] 权重蒸馏
+    - [x] 训练：成功，在 CPE 测试集上 BLEU score 能达到 0.89，甚至超过原模型 PP-formulanet-S（0.80），这说明蒸馏词表从而缩小备选类是有效的，当然原模型还在除了 UnimerNet-1M 以外的数据集上训练，因此也存在我们过拟合的可能性。但是只要数据集足够大，过拟合就是好事。
+  - 其二是更为激进的，即将原分词器的词元合并为现有分词器的词表。（这种蒸馏依旧使得模型严格缩小，而序列长度同时缩小）这一步跨度较大，主要有以下挑战：
+    - 原分词器无预分词步骤，即空格也被视为词元或词元的前缀部分，因此原模型的预测序列总是包含空格词元，故几乎是有空格预分词的预测序列的两倍长度。这将较大的破坏原模型的知识，其原有模式为 `[token1,<space>,token2]`，现在变成 `[token1,token2]`。但是我猜测这应该不会太难，毕竟下两个词的 logits 在输出分布中应该也较大（仅次于下一个词）。
+    - 原分词器中的多个词元，在现分词器中需要归并为同一个词元如` a`,`a`都要归并为`a`，这里两个词元的权重如何归并为一个值得思考。当然，这二者的权重应该大致接近。
+    - 原分词器中的单个 token，在新分词器中被拆分成多个 token 的情况，例如 \leftrightarrow 被拆分为 \, left, right, arrow，这种情况又该怎么办？
+    - 参考 [Vocabulary Transfer](https://linkinghub.elsevier.com/retrieve/pii/S0004370223000061)：根据这篇文章的启发式方法，我们应该用原词表对新词表中的词进行分词，然后用取分词列中词元嵌入的均值作为新词表的词的嵌入。
