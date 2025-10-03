@@ -275,7 +275,7 @@ def distill_vocab_transfer(args, unk_args):
     # VIPI
     merge_token_mapping = {}
     for token in target_tokenizer.vocab:
-        tokenized_ids = base_tokenizer.encode(token, add_special_tokens=False)
+        tokenized_ids = base_tokenizer.encode(" "+token, add_special_tokens=False) # add space to better remap space token embedding
         id = target_tokenizer.convert_tokens_to_ids(token)
         merge_token_mapping[id] = tokenized_ids
 
