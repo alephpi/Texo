@@ -1,4 +1,4 @@
-# SynTeX
+# texo
 A light-weight LaTeXOCR model that runs in browser.
 
 ## Training

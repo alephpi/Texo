@@ -4,7 +4,7 @@ import lightning as L
 import torch
 
 from datamodule import MERDataModule
-from syntex.utils.config import DictConfig, OmegaConf, hydra
+from texo.utils.config import DictConfig, OmegaConf, hydra
 from task import FormulaNetLit
 
 

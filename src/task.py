@@ -7,8 +7,8 @@ from torch.optim.optimizer import Optimizer
 from transformers import PreTrainedTokenizerFast
 from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmup
 
-from syntex.model.formulanet import FormulaNet
-from syntex.utils.scores import compute_bleu, compute_edit_distance
+from texo.model.formulanet import FormulaNet
+from texo.utils.scores import compute_bleu, compute_edit_distance
 
 
 class FormulaNetLit(LightningModule):

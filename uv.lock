@@ -3689,77 +3689,6 @@ wheels = [
 ]
 
 [[package]]
-name = "syntex"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "albumentations" },
-    { name = "datasets" },
-    { name = "evaluate" },
-    { name = "ftfy" },
-    { name = "lightning" },
-    { name = "opencv-python" },
-    { name = "pillow" },
-    { name = "rapidfuzz" },
-    { name = "rich" },
-    { name = "tensorboard" },
-    { name = "torch" },
-    { name = "torchvision" },
-    { name = "transformers" },
-    { name = "wand" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "hydra-core" },
-    { name = "hydra-submitit-launcher" },
-    { name = "jupyterlab" },
-    { name = "matplotlib" },
-    { name = "omegaconf" },
-    { name = "orjson" },
-    { name = "pytest" },
-    { name = "syntex" },
-    { name = "tensorboard-plugin-profile" },
-    { name = "torch-tb-profiler" },
-    { name = "torchinfo" },
-    { name = "viztracer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "albumentations", specifier = ">=2.0.2" },
-    { name = "datasets", specifier = "==4.0.0" },
-    { name = "evaluate", specifier = ">=0.4.5" },
-    { name = "ftfy", specifier = ">=6.3.1" },
-    { name = "lightning", specifier = ">=2.5.3" },
-    { name = "opencv-python", specifier = ">=4.10.0.84" },
-    { name = "pillow", specifier = ">=11.1.0" },
-    { name = "rapidfuzz", specifier = ">=3.13.0" },
-    { name = "rich", specifier = ">=10.2.2" },
-    { name = "tensorboard", specifier = ">=2.20.0" },
-    { name = "torch", specifier = "==2.7.0" },
-    { name = "torchvision", specifier = ">=0.20.1" },
-    { name = "transformers", specifier = "==4.40.0" },
-    { name = "wand", specifier = ">=0.6.13" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "hydra-core", specifier = ">=1.3.2" },
-    { name = "hydra-submitit-launcher", specifier = ">=1.2.0" },
-    { name = "jupyterlab", specifier = ">=4.4.5" },
-    { name = "matplotlib", specifier = ">=3.10.6" },
-    { name = "omegaconf", specifier = ">=2.3.0" },
-    { name = "orjson", specifier = ">=3.11.3" },
-    { name = "pytest", specifier = ">=8.4.1" },
-    { name = "syntex", editable = "." },
-    { name = "tensorboard-plugin-profile", specifier = ">=2.20.6" },
-    { name = "torch-tb-profiler", specifier = ">=0.4.3" },
-    { name = "torchinfo", specifier = ">=1.8.0" },
-    { name = "viztracer", specifier = ">=1.0.4" },
-]
-
-[[package]]
 name = "tensorboard"
 version = "2.20.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3822,6 +3751,77 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/11/965c6fd8e5cc254f1fe142d547387da17a8ebfd75a3455f637c663fb38a0/terminado-0.18.1.tar.gz", hash = "sha256:de09f2c4b85de4765f7714688fff57d3e75bad1f909b589fde880460c753fd2e", size = 32701, upload-time = "2024-03-12T14:34:39.026Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/9e/2064975477fdc887e47ad42157e214526dcad8f317a948dee17e1659a62f/terminado-0.18.1-py3-none-any.whl", hash = "sha256:a4468e1b37bb318f8a86514f65814e1afc977cf29b3992a4500d9dd305dcceb0", size = 14154, upload-time = "2024-03-12T14:34:36.569Z" },
+]
+
+[[package]]
+name = "texo"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "albumentations" },
+    { name = "datasets" },
+    { name = "evaluate" },
+    { name = "ftfy" },
+    { name = "lightning" },
+    { name = "opencv-python" },
+    { name = "pillow" },
+    { name = "rapidfuzz" },
+    { name = "rich" },
+    { name = "tensorboard" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "transformers" },
+    { name = "wand" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "hydra-core" },
+    { name = "hydra-submitit-launcher" },
+    { name = "jupyterlab" },
+    { name = "matplotlib" },
+    { name = "omegaconf" },
+    { name = "orjson" },
+    { name = "pytest" },
+    { name = "tensorboard-plugin-profile" },
+    { name = "texo" },
+    { name = "torch-tb-profiler" },
+    { name = "torchinfo" },
+    { name = "viztracer" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "albumentations", specifier = ">=2.0.2" },
+    { name = "datasets", specifier = "==4.0.0" },
+    { name = "evaluate", specifier = ">=0.4.5" },
+    { name = "ftfy", specifier = ">=6.3.1" },
+    { name = "lightning", specifier = ">=2.5.3" },
+    { name = "opencv-python", specifier = ">=4.10.0.84" },
+    { name = "pillow", specifier = ">=11.1.0" },
+    { name = "rapidfuzz", specifier = ">=3.13.0" },
+    { name = "rich", specifier = ">=10.2.2" },
+    { name = "tensorboard", specifier = ">=2.20.0" },
+    { name = "torch", specifier = "==2.7.0" },
+    { name = "torchvision", specifier = ">=0.20.1" },
+    { name = "transformers", specifier = "==4.40.0" },
+    { name = "wand", specifier = ">=0.6.13" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "hydra-core", specifier = ">=1.3.2" },
+    { name = "hydra-submitit-launcher", specifier = ">=1.2.0" },
+    { name = "jupyterlab", specifier = ">=4.4.5" },
+    { name = "matplotlib", specifier = ">=3.10.6" },
+    { name = "omegaconf", specifier = ">=2.3.0" },
+    { name = "orjson", specifier = ">=3.11.3" },
+    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "tensorboard-plugin-profile", specifier = ">=2.20.6" },
+    { name = "texo", editable = "." },
+    { name = "torch-tb-profiler", specifier = ">=0.4.3" },
+    { name = "torchinfo", specifier = ">=1.8.0" },
+    { name = "viztracer", specifier = ">=1.0.4" },
 ]
 
 [[package]]

@@ -214,7 +214,7 @@ def distill_weight(args, unk_args):
     import torch.nn as nn
     from omegaconf import OmegaConf as oc
 
-    from syntex.model.formulanet import FormulaNet
+    from texo.model.formulanet import FormulaNet
     base_config = oc.load(args.config)
     oc.resolve(base_config)
 
@@ -255,7 +255,7 @@ def distill_vocab_transfer(args, unk_args):
     import torch.nn as nn
     from omegaconf import OmegaConf as oc
 
-    from syntex.model.formulanet import FormulaNet
+    from texo.model.formulanet import FormulaNet
     base_config = oc.load(args.config)
     oc.resolve(base_config)
 

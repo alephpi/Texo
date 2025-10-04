@@ -1,1 +1,1 @@
-syntex is a minimal latex OCR package
+texo is a minimal latex OCR package

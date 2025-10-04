@@ -2,13 +2,13 @@ from pathlib import Path
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 
-from syntex.data.dataset import MERDataset, MERDatasetHF
-from syntex.data.processor import (
+from texo.data.dataset import MERDataset, MERDatasetHF
+from texo.data.processor import (
     EvalMERImageProcessor,
     TextProcessor,
     TrainMERImageProcessor,
 )
-from syntex.data.sampler import BucketBatchSampler, SortedSampler
+from texo.data.sampler import BucketBatchSampler, SortedSampler
 
 
 class MERDataModule(LightningDataModule):

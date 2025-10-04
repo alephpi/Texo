@@ -1,5 +1,5 @@
 def main():
-    print("Hello from syntex!")
+    print("Hello from texo!")
 
 
 if __name__ == "__main__":

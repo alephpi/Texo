@@ -451,4 +451,4 @@ max absolute difference in params: 0.0
 output shape=(16, 100, 50000)
 max absolute difference in output tensor: 3.7670135498046875e-05
 difference in label prediction: 0
-formulanet saved to /home/mao/workspace/SynTeX/src/syntex/formula_net/formulanet.pt
+formulanet saved to /home/mao/workspace/texo/src/texo/formula_net/formulanet.pt

@@ -6,7 +6,7 @@ defaults:
 hydra:
   launcher:
     submitit_folder: ${hydra.sweep.dir}/.submitit/%j
-    name: syntex
+    name: texo
     partition: H100,L40S
     nodes: ${trainer.num_nodes}
     gpus_per_node: ${trainer.devices}

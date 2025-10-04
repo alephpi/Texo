@@ -336,8 +336,8 @@ def main():
     print(f"{pp_total_params=}, {pp_trainable_params=}")
     print("Paddle counts BN running stats as its non_trainable params while torch doesn't count them as params(but buffers)")
 
-    from ptocr.syntex.model.formulanet import FormulaNet
-    from ptocr.syntex.model.formulanet import load_model as load_pt_model
+    from ptocr.texoodel.formulanet import FormulaNet
+    from ptocr.texoodel.formulanet import load_model as load_pt_model
 
     print("\n---load torch model---")
     # torch model that needs to be converted to

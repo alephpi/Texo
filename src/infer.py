@@ -1,7 +1,7 @@
 import torch
 
-from syntex.data.dataset import MERDataset
-from syntex.processor import EvalMERImageProcessor, TextProcessor
+from texo.data.dataset import MERDataset
+from texo.processor import EvalMERImageProcessor, TextProcessor
 from task import FormulaNetLit
 
 MODEL_CONFIG = {
