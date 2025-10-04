@@ -266,7 +266,7 @@ def distill_vocab_transfer(args, unk_args):
     assert decoder is not None
     assert base_config.pretrained is not None, "base model config must have a pretrained checkpoint"
     base_ckpt_path = base_config.pretrained
-    distill_ckpt_path = base_ckpt_path.replace(".pt", "_transfer.pt")
+    distill_ckpt_path = base_ckpt_path.replace(".pt", "_transfer3.pt")
     
     target_tokenizer = PreTrainedTokenizerFast.from_pretrained(args.distill)
     new_vocab_size = len(target_tokenizer.vocab)
@@ -275,7 +275,10 @@ def distill_vocab_transfer(args, unk_args):
     # VIPI
     merge_token_mapping = {}
     for token in target_tokenizer.vocab:
-        tokenized_ids = base_tokenizer.encode(" "+token, add_special_tokens=False) # add space to better remap space token embedding
+        if token in base_tokenizer.vocab and "Ġ"+token in base_tokenizer.vocab:
+            tokenized_ids = base_tokenizer.encode(" "+token, add_special_tokens=False) # add space to better remap space token embedding
+        else:
+            tokenized_ids = base_tokenizer.encode(token, add_special_tokens=False)
         id = target_tokenizer.convert_tokens_to_ids(token)
         merge_token_mapping[id] = tokenized_ids
 
