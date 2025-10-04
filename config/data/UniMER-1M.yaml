@@ -1,8 +1,7 @@
-train_dataset_path: ./data/dataset/hf_dataset
-eval_image_dir: ./data/dataset/UniMER-Test/cpe
-eval_text_path: ./data/dataset/UniMER-Test/cpe.txt
-test_image_dir: ${data.eval_image_dir}
-test_text_path: ${data.eval_text_path}
+train_dataset_path: ./data/dataset/hf_datasets/UniMER-Train
+filter_train: true
+eval_dataset_path: ./data/dataset/hf_datasets/UniMER-Test/cpe
+test_dataset_paths: ./data/dataset/hf_datasets/UniMER-Test
 image_processor:
   image_size:
     width: 384

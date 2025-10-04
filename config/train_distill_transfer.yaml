@@ -5,6 +5,7 @@ defaults:
   - data: UniMER-1M
   - training: finetune_distill_transfer
   - trainer: default
+  - _self_
 
 trainer:
   val_check_interval: 100

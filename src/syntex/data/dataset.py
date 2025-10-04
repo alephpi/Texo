@@ -82,25 +82,27 @@ class MERDataset(Dataset):
         }
 
 class MERDatasetHF(Dataset):
-    def __init__(self, dataset_path, image_processor: BaseMERImageProcessor, text_processor: TextProcessor):
+    def __init__(self, dataset_path, image_processor: BaseMERImageProcessor, text_processor: TextProcessor, filtered=False):
         self.dataset = HFDataset.load_from_disk(dataset_path)
         self.image_processor = image_processor
         self.text_processor = text_processor
 
         self.pad_token_id = int(self.text_processor.tokenizer.pad_token_id)
         self.unk_token_id = int(self.text_processor.tokenizer.unk_token_id)
-        # filter out items with <unk> token
-        # self.dataset = list(self.dataset) # we can afford loading the whole dataset into memory
-        filtered_dataset = []
-        for item in self.dataset:
-            input_ids = self.text_processor.tokenizer(
-                item["text"], 
-                add_special_tokens=True
-            )["input_ids"]
-            if self.unk_token_id not in input_ids:
-                filtered_dataset.append(item)
-        print(f"Dataset filtered, from {len(self.dataset)} items to {len(filtered_dataset)} items.")
-        self.dataset = filtered_dataset
+        # filter out items with <unk> token from training data
+        if filtered:
+            filtered_dataset = []
+            for item in self.dataset:
+                input_ids = self.text_processor.tokenizer(
+                    item["text"], 
+                    add_special_tokens=False,
+                )["input_ids"]
+                if self.unk_token_id not in input_ids:
+                    filtered_dataset.append(item)
+            print(f"Dataset filtered, from {len(self.dataset)} items to {len(filtered_dataset)} items.")
+            self.dataset = filtered_dataset
+        else:
+            self.dataset = list(self.dataset) # we can afford loading the whole dataset into memory
         self.labels_length = [len(item['text'].split(' ')) + 1 for item in self.dataset]
 
     def __len__(self) -> int:
