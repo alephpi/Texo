@@ -1,6 +1,6 @@
 lr_scheduler:
   min_lr: 1e-8
-  num_training_steps: 5e5
+  num_training_steps: 1e5
   num_warmup_steps: 5e3
 optimizer:
   lr: 1e-5

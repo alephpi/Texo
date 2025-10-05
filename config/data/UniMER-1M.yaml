@@ -1,5 +1,5 @@
 train_dataset_path: ./data/dataset/hf_datasets/UniMER-Train
-filter_train: true
+filter_train: false
 eval_dataset_path: ./data/dataset/hf_datasets/UniMER-Test/cpe
 test_dataset_paths: ./data/dataset/hf_datasets/UniMER-Test
 image_processor:

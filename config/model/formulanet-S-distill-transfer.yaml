@@ -10,7 +10,7 @@ encoder:
     stage4: [1024, 384, 2048, 1, 6, 5, true, true]
   hidden_size: 2048
   pretrained: ""
-  freeze: true
+  freeze: false
 decoder:
   model_type: mbart
   vocab_size: 687
@@ -30,4 +30,4 @@ decoder:
   add_cross_attention: true
   scale_embedding: true
   tie_word_embeddings: false
-pretrained: ./src/texo/model/formulanet_distill_best_transfer.pt
+pretrained: ./src/texo/model/formulanet_distill_best_transfer3.pt
