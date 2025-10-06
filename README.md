@@ -7,18 +7,24 @@ pronounced as /ˈtɛːkoʊ/
 </p>
 
 <p align="center">
-  A minimalist LaTeX OCR model which contains only 20M parameters.
+  A minimalist free and open-source SOTA LaTeX OCR model which contains only 20M parameters.
 </p>
 
 ## Features
+- Free and open-source.
 - Fast and lightweight inference.
 - Trainable on consumer's-level GPU.
 - Well organized code as a tutorial.
 - Running in browser!
 
+## Prelude
+Despite a growing number of STEM and AI learners with their note-taking needs today, a free, fast, more accessible yet precise LaTeX OCR tool is still absent. Lying exactly in the comfort zone of machine learning due to the closed vocabulary and less generalization requirements, such classical pattern recognition task can be considered as solved thanks to recent deep learning progress(TrOCR, GOT-2.0, UniMERNet, PPFormulaNet). So here comes the Texo, which tackles this problem in the scope of a personal project.
+
+It is also a comprehensive practice to combine the knowledge and experiences I learned so far from school and online, as well as a tentative contribution to my beloved open source community.
+
 ## Performance
 
-Texo is a distilled version of PPFormulaNet-S and finetuned on UniMERNet-1M, hence it should preserve the most part of the performance compared to PPFormulaNet-S.
+Texo is a distilled version of PPFormulaNet-S and finetuned on UniMERNet-1M, hence it should preserve the most part of the performance compared to PPFormulaNet-S. Here is the evaluation results on the UniMERNet-Test dataset.
 
 |               Model               |      Params      | Metric        | SPE    | CPE    | SCE    | HWE    |
 | :-------------------------------: | :--------------: | ------------- | ------ | ------ | ------ | ------ |
@@ -31,7 +37,7 @@ Texo is a distilled version of PPFormulaNet-S and finetuned on UniMERNet-1M, hen
 |     Texo-transfer<sup>*</sup>     | 20M<sup>**</sup> | BLEU          | 0.8597 | 0.8334 | 0.5549 | 0.7973 |
 |                                   |                  | Edit distance | 0.0980 | 0.1306 | 0.2187 | 0.0999 |
 
-We only list the lightweight version for the SOTA models, as we can see in terms of sequential metrics like BLEU or Edit distance, our model has comparable performance while reducing a lot of parameters.
+We only list the lightweight version for the SOTA models, as we can see in terms of sequential metrics like BLEU or Edit distance, our model has comparable performance while reducing a lot of parameters. 
 
 > `-` means not reported in the paper.
 > 
