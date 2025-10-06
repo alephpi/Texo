@@ -54,7 +54,7 @@ uv sync
 ```
 > For those who don't use uv, it worths to try it. For those who insist not to use, I guess you know how to adapt.
 
-## Download Dataset (UniMER-1M)
+## Download dataset (UniMER-1M)
 Following https://huggingface.co/datasets/wanderkid/UniMER_Dataset as what I've done
 
 If you are lazy, use the one that I arranged and normalized.
@@ -130,3 +130,8 @@ Some beautiful loss curves to give you an impression of the loss scale and conve
 - [MixTeX](https://github.com/RQLuo/MixTeX-Latex-OCR) and [TexTeller](https://github.com/OleehyO/TexTeller): motivation
 - Telecom Paris for providing the GPU cluster.
 - My cousin 润吉 for helping me draw the logo. BTW, it is a taco in case you guys don't recognize it.
+
+## License
+[AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+
+Copyright (C) 2025-present Sicheng Mao <maosicheng98@gmail.com>
