@@ -1,8 +1,10 @@
 <p align="center" style="margin-bottom: 0">
   <img src="./assets/icon.png" alt="Texo Icon" width="120"/>
 </p>
-<div align="center" style="font-size: 3em; font-weight: bold;margin-top: 0; margin-bottom: 0;">Texo</div>
-<p align="center" style="margin-top: 0"><em>/ˈtɛːkoʊ/</em></p>
+<h1 align="center">Texo</h1>
+<p align="center">
+pronounced as /ˈtɛːkoʊ/
+</p>
 
 <p align="center">
   A minimalist LaTeX OCR model which contains only 20M parameters.
@@ -18,16 +20,16 @@
 
 Texo is a distilled version of PPFormulaNet-S and finetuned on UniMERNet-1M, hence it should preserve the most part of the performance compared to PPFormulaNet-S.
 
-|           Model            |      Params      | Metric        | SPE    | CPE    | SCE    | HWE    |
-| :------------------------: | :--------------: | ------------- | ------ | ------ | ------ | ------ |
+|               Model               |      Params      | Metric        | SPE    | CPE    | SCE    | HWE    |
+| :-------------------------------: | :--------------: | ------------- | ------ | ------ | ------ | ------ |
 |  UniMERNet-T<sup>&dagger;</sup>   |       107M       | BLEU          | 0.909  | 0.902  | 0.566  | 0.883  |
-|                            |                  | Edit distance | 0.066  | 0.075  | 0.239  | 0.078  |
+|                                   |                  | Edit distance | 0.066  | 0.075  | 0.239  | 0.078  |
 | PPFormulaNet-S<sup>&dagger;</sup> |       57M        | BLEU          | 0.8694 | 0.8071 | -      | -      |
-|                            |                  | Edit distance | -      | -      | -      | -      |
-|  Texo-distill<sup>*</sup>  |       20M        | BLEU          | 0.9014 | 0.8909 | 0.7034 | 0.8606 |
-|                            |                  | Edit distance | 0.0780 | 0.1042 | 0.1941 | 0.0995 |
-| Texo-transfer<sup>*</sup>  | 20M<sup>**</sup> | BLEU          | 0.8597 | 0.8334 | 0.5549 | 0.7973 |
-|                            |                  | Edit distance | 0.0980 | 0.1306 | 0.2187 | 0.0999 |
+|                                   |                  | Edit distance | -      | -      | -      | -      |
+|     Texo-distill<sup>*</sup>      |       20M        | BLEU          | 0.9014 | 0.8909 | 0.7034 | 0.8606 |
+|                                   |                  | Edit distance | 0.0780 | 0.1042 | 0.1941 | 0.0995 |
+|     Texo-transfer<sup>*</sup>     | 20M<sup>**</sup> | BLEU          | 0.8597 | 0.8334 | 0.5549 | 0.7973 |
+|                                   |                  | Edit distance | 0.0980 | 0.1306 | 0.2187 | 0.0999 |
 
 We only list the lightweight version for the SOTA models, as we can see in terms of sequential metrics like BLEU or Edit distance, our model has comparable performance while reducing a lot of parameters.
 
