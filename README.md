@@ -60,11 +60,12 @@ If you are interested in all the preprocessings, check [here](./data/tokenizer) 
 
 ## Training
 
-### requirements
+### Requirements
 - Mine: 50G CPU memory, A40/L40S 46G.
 - Recommend: 50G CPU memory, 40G GPU memory.
-- Minimal: 20G CPU memory(with streaming dataloading) and 10G GPU memory(with accumulative gradient).
+- Minimal: 20G CPU memory(with streaming dataloading) and 16G GPU memory(with accumulative gradient).
 
+### Run
 We use `hydra` to manage training configurations and experiments.
 
 ```sh

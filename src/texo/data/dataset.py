@@ -102,7 +102,7 @@ class MERDatasetHF(Dataset):
             print(f"Dataset filtered, from {len(self.dataset)} items to {len(filtered_dataset)} items.")
             self.dataset = filtered_dataset
         else:
-            self.dataset = list(self.dataset) # we can afford loading the whole dataset into memory
+            self.dataset = list(self.dataset) # we can afford loading the whole dataset into memory, otherwise comment it out
         self.labels_length = [len(item['text'].split(' ')) + 1 for item in self.dataset]
 
     def __len__(self) -> int:
