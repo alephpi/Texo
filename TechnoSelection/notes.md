@@ -150,18 +150,6 @@ We leave the community to extend them.
 Use UniMERNet metric:
 MixTex TexTeller UniMERNet-tiny,small,base
 
-## Acknowledgements
-
-- [transformers](https://github.com/huggingface/transformers): framework, model decoder, tokenizer
-- [UniMERNet](https://github.com/opendatalab/UniMERNet): dataset, image processor
-- [Im2Markup](https://github.com/harvardnlp/im2markup): latex preprocessing
-- [KaTeX](https://github.com/KaTeX/KaTeX): latex vocabulary for training tokenizer and latex parser for preprocessing
-- [my-unimernet](https://github.com/ParaN3xus/my-unimernet/blob/main/unimernet/components/processor/image_processor.py): image processor (plus a nice codebase to demystify UniMERNet)
-- [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR/blob/main/ppocr/modeling/backbones/rec_pphgnetv2.py): model architecture, pretraining weights
-- [PaddleOCR2Pytorch](https://github.com/frotms/PaddleOCR2Pytorch) and [D-FINE](https://github.com/Peterande/D-FINE): model encoder implementation
-- [Im2Markup](https://github.com/harvardnlp/im2markup), [LaTeX-OCR](https://github.com/lukas-blecher/LaTeX-OCR) and [TrOCR](https://github.com/microsoft/unilm/tree/master/trocr): pioneer
-- [MixTeX](https://github.com/RQLuo/MixTeX-Latex-OCR) and [TexTeller](https://github.com/OleehyO/TexTeller): motivation
-
 ## Notes
 UniMERNet 的论文是比较详细的，并且它参考的前作 Donut 的论文亦如是。Donut 论文中提到 text reading 预训练（其实就是 OCR）对涨点帮助较大，但 Donut 相当于是文档理解模型，它的下游任务是比较多的，而它又自称是 OCR-free 模型，其实不妨说是把传统多步的文档理解流程中的 OCR 模块嵌入到预训练知识中。
 而对于 UniMERNet 而言，因为它本质上就是 Math OCR，因此预训练并没有它说的那么大提升（只是 BLEU score 上小数点后第三位的提升），何况后作 CDM 上已经指出 BLEU score 作为 Math OCR 任务的度量标准是有失公允的。因此我个人认为就这个任务而言，预训练的帮助有限。
@@ -217,8 +205,6 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 - 尝试了将 `hidden_size` 扩大到 `512,768,1024`，无帮助。将 `decoder_layers` 增加到 `4，8，12` 也没有帮助。
 - 尝试将 sampling strategy 改为分桶（随机分桶、顺序分桶），尽管确实能加快训练速度（无效 padding 减少），但损失函数和梯度值均发生跳变，最终收敛效果也并不理想（未能超越无分桶的默认策略）。
 
-**无预训练权重进行初始化的情况下，验证损失至多降到1.0。**
-
 准备尝试用 ppformulanet 的 decoder 权重来初始化训练。
 注意 ppformulanet-S 有几项设置需修改，才能具有较小误差：
 1. `is_export`: 这个选项极坑，在源代码中即便设置为 `False`，也会在 `eval` 模式下在 `forward` 函数内被篡改为 `True`。
@@ -227,26 +213,17 @@ PPFormulaNet-S 的架构及模型参数量（单位 M）：
 - [x] 实现 paddle 版本的 mbart decoder 到 transformers 的权重迁移，随机输入前向传播误差小于 1e-5
 - [x] 实现全模型权重迁移，随机输入前向传播误差小于 3e-5。
 
-- [x] 蒸馏词表：
+- [ ] 蒸馏词表：
   通过缩小词表来达成模型压缩的方法有两种：
-  - 其一是较为温和的，即采用原分词器（NougatTokenizer），仅仅将训练语料中未使用的词元删除，同时删除其在 embedding 和 lm_head 层对应的权重。这种蒸馏使得模型严格缩小而序列长度保持不变。我们称之为**子集蒸馏**。
+  - 其一是较为温和的，即采用原分词器（NougatTokenizer），仅仅将训练语料中未使用的词元删除，同时删除其在 embedding 和 lm_head 层对应的权重。这种蒸馏使得模型严格缩小而序列长度保持不变。
     - [x] BPE 分词器蒸馏
     - [x] 权重蒸馏
     - [x] 训练：成功，在 CPE 测试集上 BLEU score 能达到 0.89，甚至超过原模型 PP-formulanet-S（0.80），这说明蒸馏词表从而缩小备选类是有效的，当然原模型还在除了 UnimerNet-1M 以外的数据集上训练，因此也存在我们过拟合的可能性。但是只要数据集足够大，过拟合就是好事。
-  - 其二是更为激进的，即将原分词器的词元合并为现有分词器的词表，我们称之为**词表转换**。（这种蒸馏依旧使得模型严格缩小，而序列长度同时缩小）这一步跨度较大，主要有以下挑战：
+  - 其二是更为激进的，即将原分词器的词元合并为现有分词器的词表。（这种蒸馏依旧使得模型严格缩小，而序列长度同时缩小）这一步跨度较大，主要有以下挑战：
     - 原分词器无预分词步骤，即空格也被视为词元或词元的前缀部分，因此原模型的预测序列总是包含空格词元，故几乎是有空格预分词的预测序列的两倍长度。这将较大的破坏原模型的知识，其原有模式为 `[token1,<space>,token2]`，现在变成 `[token1,token2]`。但是我猜测这应该不会太难，毕竟下两个词的 logits 在输出分布中应该也较大（仅次于下一个词）。
     - 原分词器中的多个词元，在现分词器中需要归并为同一个词元如` a`,`a`都要归并为`a`，这里两个词元的权重如何归并为一个值得思考。当然，这二者的权重应该大致接近。
     - 原分词器中的单个 token，在新分词器中被拆分成多个 token 的情况，例如 \leftrightarrow 被拆分为 \, left, right, arrow，这种情况又该怎么办？
-    - 参考 [Vocabulary Transfer](https://linkinghub.elsevier.com/retrieve/pii/S0004370223000061)：根据这篇文章的启发式方法（我们称启发式1），我们应该用原词表对新词表中的词进行分词，然后用取分词列中词元嵌入的均值作为新词表的词的嵌入。但是这样做并不完全符合我们的要求，因为我们的新词表抛弃了空格作为词元，具体来说，这种对应如下：即原词表为 $V_o$，新词表为 $V_n$，那么我们可以把新词表中的词元分为两种：
+    - 参考 [Vocabulary Transfer](https://linkinghub.elsevier.com/retrieve/pii/S0004370223000061)：根据这篇文章的启发式方法，我们应该用原词表对新词表中的词进行分词，然后用取分词列中词元嵌入的均值作为新词表的词的嵌入。但是这样做并不完全符合我们的要求，因为我们的新词表抛弃了空格作为词元，具体来说，这种对应如下：即原词表为 $V_o$，新词表为 $V_n$，那么我们可以把新词表中的词元分为两种：
   - 1. 对新词表中的词元 $v\in V_n$， $v\in V_o$ 且存在 $v'\in V_o$，使得 $v'= Ġv$。
   - 2. 不满足 1 中的条件。
-    在任意一个序列的分词中，情形 1 中真正对应于 $v$ 的嵌入不应该是 $v$ 的嵌入，而是 $v'$ 的嵌入。情形 2 的嵌入才是上述启发式的嵌入，但同时要注意到这种情形下，必须把嵌入加上空格字符的嵌入 $Ġ$。我们称这种方法为启发式2。
-    
-
-
-子集蒸馏能使验证损失达到0.27，复杂公式（CPE）测试集上BLEU达到0.89，编辑距离达到0.10
-词表转换能使验证损失达到0.28，复杂公式（CPE）测试集上BLEU达到0.83，编辑距离达到0.13
-多组实验比较下来发现：
-验证损失与词表转换的启发式方法关系（我们使用了三种版本）不大，可能有些最初可以加速收敛，但最终收敛大小差不多都在0.3左右。有趣的是，如果对训练集作unk滤除的话（大概滤除5000条样本左右），验证损失的收敛值会到0.6-0.8，不知道是什么原因。但无论如何滤除与否，BLEU和编辑距离都稳定在0.83和0.13左右。
-
-但是需要注意的是，BLEU和编辑距离的“降低”其实并不能直接评判两种蒸馏方法的好坏，因为词表转换完全去除了空格，而子集蒸馏的词表对空格的正确预测一方面提高了BLEU分中n-gram的匹配率，另一方面子集蒸馏的标签长度大约为词表转换的标签长度两倍，因此也提高了编辑距离的分数（后者会对长度作标准化）。然而我们知道，对空格的正确预测实际上对latex文本的预测没有任何实质性变化，反而会使推理速度变慢。更为公平合理的评价应该使用CDM，但我们精力有限，就不测了。我的直觉是，二者在准确度上没有本质区别，反而是采用了WordLevel和更小词表的词表转换模型的推理速度更快。
+    在任意一个序列的分词中，情形 1 中真正对应于 $v$ 的嵌入不应该是 $v$ 的嵌入，而是 $v'$ 的嵌入。情形 2 的嵌入才是上述启发式的嵌入，但同时要注意到这种情形下，必须把嵌入加上空格字符的嵌入 $Ġ$。
