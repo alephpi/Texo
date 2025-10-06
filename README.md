@@ -1,5 +1,5 @@
 <p align="center" style="margin-bottom: 0">
-  <img src="icon.png" alt="Texo Icon" width="120"/>
+  <img src="./assets/icon.png" alt="Texo Icon" width="120"/>
 </p>
 <div align="center" style="font-size: 2.5em; font-weight: bold;margin-top: 0; margin-bottom: 0;">Texo</div>
 <p align="center" style="margin-top: 0"><em>/ˈtɛːkoʊ/</em></p>
@@ -86,6 +86,21 @@ tensorboard --logdir outputs
 
 ### Figures
 Some beautiful loss curves to give you an impression of the loss scale and convergence process.
+
+#### Training loss
+<img src="./assets/train_loss.png">
+
+#### Validation loss
+<img src="./assets/val_loss.png">
+
+#### BLEU
+<img src="./assets/BLEU.png">
+
+#### Edit distance
+<img src="./assets/edit_distance.png">
+
+#### Learning rate
+<img src="./assets/learning_rate.png">
 
 ## Acknowledgements
 
