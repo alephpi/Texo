@@ -92,8 +92,8 @@ python src/train.py --multirun --config-dir="./config" --config-name="train_slur
 ```
 See other training configurations in [config](./config/) directory.
 
-### Check training log
-The training results would be stored in [outputs](./outputs) directiory, to visualize the training logs, run
+### Log
+The training results are stored in [outputs](./outputs) directiory. To visualize it, run
 
 ```sh
 tensorboard --logdir outputs
