@@ -1,7 +1,7 @@
 <p align="center" style="margin-bottom: 0">
   <img src="./assets/icon.png" alt="Texo Icon" width="120"/>
 </p>
-<div align="center" style="font-size: 2.5em; font-weight: bold;margin-top: 0; margin-bottom: 0;">Texo</div>
+<div align="center" style="font-size: 3em; font-weight: bold;margin-top: 0; margin-bottom: 0;">Texo</div>
 <p align="center" style="margin-top: 0"><em>/ˈtɛːkoʊ/</em></p>
 
 <p align="center">
@@ -57,6 +57,12 @@ If you are lazy, use the one that I arranged and normalized.
 If you are interested in all the preprocessings, check [here](./data/tokenizer) and [here](./scripts/python/normalize.py), where I collected and sorted all the useful KaTeX commands.
 
 ## Training
+
+### requirements
+- Mine: 50G CPU memory, A40/L40S 46G.
+- Recommend: 50G CPU memory, 40G GPU memory.
+- Minimal: 20G CPU memory(with streaming dataloading) and 10G GPU memory(with accumulative gradient).
+
 We use `hydra` to manage training configurations and experiments.
 
 ```sh
@@ -113,4 +119,5 @@ Some beautiful loss curves to give you an impression of the loss scale and conve
 - [PaddleOCR2Pytorch](https://github.com/frotms/PaddleOCR2Pytorch) and [D-FINE](https://github.com/Peterande/D-FINE): model encoder implementation
 - [Im2Markup](https://github.com/harvardnlp/im2markup), [LaTeX-OCR](https://github.com/lukas-blecher/LaTeX-OCR) and [TrOCR](https://github.com/microsoft/unilm/tree/master/trocr): pioneers
 - [MixTeX](https://github.com/RQLuo/MixTeX-Latex-OCR) and [TexTeller](https://github.com/OleehyO/TexTeller): motivation
+- Telecom Paris for providing the GPU cluster.
 - My cousin 润吉 for helping me draw the logo. BTW, it is a taco in case you guys don't recognize it.
