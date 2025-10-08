@@ -1,3 +1,4 @@
+# equivalently normalize the latex codes to make it shorter and easier for model learning
 from pathlib import Path
 
 from tqdm import tqdm

@@ -1,5 +1,6 @@
 import hydra
 import logging
+from pathlib import Path
 
 import lightning as L
 import torch
@@ -23,8 +24,17 @@ def main(cfg: DictConfig):
     # model = FormulaNetLit.load_from_checkpoint("/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-freeze=False/2025-10-03_22-19-36/0/checkpoints/step=76000-val_loss=7.7300e-01-BLEU=0.8353-edit_distance=0.1296.ckpt", 
     #                                         hparams_file="/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-freeze=False/2025-10-03_22-19-36/0/tb_logs/hparams.yaml")
 
-    model = FormulaNetLit.load_from_checkpoint("/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-decoder_layers=2-hidden_size=384/2025-10-02_21-32-53/0/checkpoints/step=117811-val_loss=2.9941e-01-BLEU=0.8358-edit_distance=0.1295.ckpt", 
-                                            hparams_file="/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-decoder_layers=2-hidden_size=384/2025-10-02_21-32-53/0/tb_logs/hparams.yaml")
+    # model = FormulaNetLit.load_from_checkpoint("/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-decoder_layers=2-hidden_size=384/2025-10-02_21-32-53/0/checkpoints/step=117811-val_loss=2.9941e-01-BLEU=0.8358-edit_distance=0.1295.ckpt", 
+    #                                         hparams_file="/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-decoder_layers=2-hidden_size=384/2025-10-02_21-32-53/0/tb_logs/hparams.yaml")
+
+    # model = FormulaNetLit.load_from_checkpoint("/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-decoder_layers=2-hidden_size=384/2025-10-02_21-32-53/0/checkpoints/last.ckpt", 
+    #                                         hparams_file="/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-decoder_layers=2-hidden_size=384/2025-10-02_21-32-53/0/tb_logs/hparams.yaml")
+    ckpt_path = Path("/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-freeze=False/2025-10-04_22-15-03/0/checkpoints/step=85765-val_loss=2.9496e-01-BLEU=0.8356-edit_distance=0.1291.ckpt")
+    model = FormulaNetLit.load_from_checkpoint(ckpt_path, 
+                                            hparams_file=ckpt_path.parent.parent.joinpath("tb_logs/hparams.yaml"))
+
+    # model = FormulaNetLit.load_from_checkpoint("/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-freeze=True/2025-10-02_21-36-25/0/checkpoints/last.ckpt", 
+    #                                         hparams_file="/home/ids/smao-22/phd/SynTeX/outputs/bs=64-lr=1e-05-freeze=True/2025-10-02_21-36-25/0/tb_logs/hparams.yaml")
 
     model.eval()
     logging.log(logging.INFO, f"Model checkpoint loaded.")

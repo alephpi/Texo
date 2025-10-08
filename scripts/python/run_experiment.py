@@ -1,3 +1,4 @@
+# casual script for me to run experiments on slurm cluster, not very useful for you guys, 
 import subprocess
 
 def run_train_commands():
