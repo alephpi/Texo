@@ -1,7 +1,7 @@
 <p align="center" style="margin-bottom: 0">
-  <img src="./assets/icon.png" alt="Texo Icon" width="120"/>
+  <img src="./assets/svg/logo-text.svg#gh-light-mode-only" alt="Texo Logo" width="300"/>
+  <img src="./assets/svg/logo-text-dark.svg#gh-dark-mode-only" alt="Texo Logo" width="300"/>
 </p>
-<h1 align="center">Texo</h1>
 <p align="center">
 pronounced as /ˈtɛːkoʊ/
 </p>
