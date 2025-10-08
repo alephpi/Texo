@@ -129,7 +129,6 @@ Some beautiful loss curves to give you an impression of the loss scale and conve
 - [Im2Markup](https://github.com/harvardnlp/im2markup), [LaTeX-OCR](https://github.com/lukas-blecher/LaTeX-OCR) and [TrOCR](https://github.com/microsoft/unilm/tree/master/trocr): pioneers
 - [MixTeX](https://github.com/RQLuo/MixTeX-Latex-OCR) and [TexTeller](https://github.com/OleehyO/TexTeller): motivation
 - Telecom Paris for providing the GPU cluster.
-- My cousin 润吉 for helping me draw the logo. BTW, it is a taco in case you guys don't recognize it.
 
 ## License
 [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
