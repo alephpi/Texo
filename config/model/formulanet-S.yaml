@@ -30,4 +30,4 @@ decoder:
   add_cross_attention: true
   scale_embedding: true
   tie_word_embeddings: false
-pretrained: ./src/texo/model/formulanet.pt
+pretrained: ./model/formulanet.pt

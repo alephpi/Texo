@@ -10,7 +10,7 @@ encoder:
     stage3: [512, 192, 1024, 3, 6, 5, true, true]
     stage4: [1024, 384, 2048, 1, 6, 5, true, true]
   hidden_size: 2048
-  pretrained: ./src/texo/model/formulanet_encoder.pt
+  pretrained: ./model/formulanet_encoder.pt
   freeze: true
 decoder:
   model_type: mbart

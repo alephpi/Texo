@@ -30,4 +30,4 @@ decoder:
   add_cross_attention: true
   scale_embedding: true
   tie_word_embeddings: false
-pretrained: ./src/texo/model/formulanet_distill_best_transfer3.pt
+pretrained: ./model/formulanet_distill_best_transfer.pt

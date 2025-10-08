@@ -30,5 +30,5 @@ decoder:
   add_cross_attention: true
   scale_embedding: true
   tie_word_embeddings: false
-# pretrained: ./src/texo/model/formulanet_distill.pt (start ckpt)
-pretrained: ./src/texo/model/formulanet_distill_best.pt # (end ckpt)
+# pretrained: ./model/formulanet_distill.pt (start ckpt)
+pretrained: ./model/formulanet_distill_best.pt # (end ckpt)

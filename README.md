@@ -2,8 +2,8 @@
   <img src="./assets/svg/logo-text.svg#gh-light-mode-only" alt="Texo Logo" width="300"/>
   <img src="./assets/svg/logo-text-dark.svg#gh-dark-mode-only" alt="Texo Logo" width="300"/>
 </p>
-<p align="center">
-pronounced as /ˈtɛːkoʊ/
+<p align="center" style="font-size: 0.9em">
+Texo is pronounced as /ˈtɛːkoʊ/
 </p>
 
 <p align="center">
@@ -100,7 +100,7 @@ tensorboard --logdir outputs
 ```
 
 ### Figures
-Some beautiful loss curves to give you an impression of the loss scale and convergence process.
+Some beautiful loss curves to give you an impression of the loss scale and the convergence process.
 
 #### Training loss
 <img src="./assets/train_loss.png">

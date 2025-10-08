@@ -266,7 +266,7 @@ def distill_vocab_transfer(args, unk_args):
     assert decoder is not None
     assert base_config.pretrained is not None, "base model config must have a pretrained checkpoint"
     base_ckpt_path = base_config.pretrained
-    distill_ckpt_path = base_ckpt_path.replace(".pt", "_transfer3.pt")
+    distill_ckpt_path = base_ckpt_path.replace(".pt", "_transfer.pt")
     
     target_tokenizer = PreTrainedTokenizerFast.from_pretrained(args.distill)
     new_vocab_size = len(target_tokenizer.vocab)
