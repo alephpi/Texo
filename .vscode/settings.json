@@ -1,0 +1,7 @@
+{
+  "python.analysis.exclude": [
+    "data/",
+    "model/",
+    "outputs/",
+  ]
+}
