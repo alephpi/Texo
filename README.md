@@ -14,7 +14,7 @@ Texo is pronounced as /ˈtɛːkoʊ/
 - Fast and lightweight inference.
 - Trainable on consumer's-level GPU.
 - Well organized code as a tutorial.
-<!-- - Running in browser! -->
+- Running in browser! (comming soon)
 
 ## Prelude
 Despite a growing number of STEM and AI learners with their note-taking needs today, a free, fast, more accessible yet precise LaTeX OCR tool is still absent. Lying exactly in the comfort zone of machine learning due to the closed vocabulary and less generalization requirements, such classical pattern recognition task can be considered as solved thanks to recent deep learning progress(TrOCR, GOT-2.0, UniMERNet, PPFormulaNet). So here comes the Texo, which tackles this problem in the scope of a personal project.
