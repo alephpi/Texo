@@ -53,7 +53,7 @@ uv sync
 ```
 > For those who don't use uv, it worths to try it. For those who insist not to use, I guess you know how to adapt.
 
-### Download model
+## Download model
 ```sh
 # model only
 python scripts/python/hf_hub.py pull
@@ -62,9 +62,8 @@ python scripts/python/hf_hub.py pull
 # for those who want to train from useful checkpoints
 python scripts/python/hf_hub.py pull --with_useful_ckpts
 ```
-If you don't want to use it online (which I recommend the most), you can consume the model with transformers pipeline:
 
-### Inference
+## Inference
 Check [`demo.ipynb`](./demo.ipynb)
 
 ## Training
