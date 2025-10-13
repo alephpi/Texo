@@ -30,4 +30,4 @@ decoder:
   add_cross_attention: true
   scale_embedding: true
   tie_word_embeddings: false
-pretrained: ./model/formulanet.pt
+pretrained: ./model/checkpoints/formulanet.pt

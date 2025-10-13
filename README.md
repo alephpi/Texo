@@ -5,7 +5,6 @@
 <p align="center" style="font-size: 0.9em">
 Texo is pronounced as /ˈtɛːkoʊ/
 </p>
-
 <p align="center">
   A minimalist free and open-source SOTA LaTeX OCR model which contains only 20M parameters.
 </p>
@@ -15,7 +14,7 @@ Texo is pronounced as /ˈtɛːkoʊ/
 - Fast and lightweight inference.
 - Trainable on consumer's-level GPU.
 - Well organized code as a tutorial.
-- Running in browser!
+<!-- - Running in browser! -->
 
 ## Prelude
 Despite a growing number of STEM and AI learners with their note-taking needs today, a free, fast, more accessible yet precise LaTeX OCR tool is still absent. Lying exactly in the comfort zone of machine learning due to the closed vocabulary and less generalization requirements, such classical pattern recognition task can be considered as solved thanks to recent deep learning progress(TrOCR, GOT-2.0, UniMERNet, PPFormulaNet). So here comes the Texo, which tackles this problem in the scope of a personal project.
@@ -54,15 +53,19 @@ uv sync
 ```
 > For those who don't use uv, it worths to try it. For those who insist not to use, I guess you know how to adapt.
 
-## Download dataset (UniMER-1M)
-Following https://huggingface.co/datasets/wanderkid/UniMER_Dataset as what I've done
+### Download model
+```sh
+# model only
+python scripts/python/hf_hub.py pull
+```
+```sh
+# for those who want to train from useful checkpoints
+python scripts/python/hf_hub.py pull --with_useful_ckpts
+```
+If you don't want to use it online (which I recommend the most), you can consume the model with transformers pipeline:
 
-If you are lazy, use the one that I arranged and normalized.
-- https://huggingface.co/datasets/alephpi/UniMER-Train
-- https://huggingface.co/datasets/alephpi/UniMER-Test
-
-## Tokenizer
-If you are interested in all the preprocessings, check [here](./data/tokenizer) and [here](./scripts/python/normalize.py), where I collected and sorted all the useful KaTeX commands.
+### Inference
+Check [`demo.ipynb`](./demo.ipynb)
 
 ## Training
 
@@ -71,7 +74,18 @@ If you are interested in all the preprocessings, check [here](./data/tokenizer) 
 - Recommend: 50G CPU memory, 40G GPU memory.
 - Minimal: 20G CPU memory(with streaming dataloading) and 16G GPU memory(with accumulative gradient).
 
-### Run
+### Download dataset (UniMER-1M)
+Following https://huggingface.co/datasets/wanderkid/UniMER_Dataset as what I've done
+
+If you are lazy, use the one that I arranged and normalized.
+- https://huggingface.co/datasets/alephpi/UniMER-Train
+- https://huggingface.co/datasets/alephpi/UniMER-Test
+
+
+If you are interested in all the preprocessings, check [here](./data/tokenizer) and [here](./scripts/python/normalize.py), where I collected and sorted all the useful KaTeX commands.
+
+
+### Launch
 We use `hydra` to manage training configurations and experiments.
 
 ```sh
