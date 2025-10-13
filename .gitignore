@@ -210,5 +210,4 @@ outputs
 !.gitkeep
 !convert.log
 *.pt
-model/
 !demo.ipynb

@@ -11,6 +11,7 @@ dependencies = [
     "ftfy>=6.3.1",
     "lightning>=2.5.3",
     "opencv-python>=4.10.0.84",
+    "optimum-onnx[onnxruntime]>=0.0.1",
     "pillow>=11.1.0",
     "rapidfuzz>=3.13.0",
     "rich>=10.2.2",
