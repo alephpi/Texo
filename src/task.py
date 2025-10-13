@@ -14,7 +14,7 @@ from texo.utils.scores import compute_bleu, compute_edit_distance
 class FormulaNetLit(LightningModule):
     def __init__(self, model_config, training_config):
         super().__init__()
-        self.tokenizer_path = model_config.tokenizer_path
+        self.tokenizer_path = model_config["tokenizer_path"]
         self.model_config = model_config
         self.training_config = training_config
 

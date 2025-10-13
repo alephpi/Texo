@@ -12,9 +12,9 @@ from texo.data.sampler import BucketBatchSampler, SortedSampler
 
 
 class MERDataModule(LightningDataModule):
-    def __init__(self, data_config: dict):
+    def __init__(self, data_config):
         super().__init__()
-        self.data_config = data_config
+        self.data_config: dict = data_config
         self.save_hyperparameters()
         sampling_strategy: str = self.data_config.get("sampling_strategy",'')
         sampling_strategies = {

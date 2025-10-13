@@ -15,14 +15,14 @@ def main(cfg: DictConfig):
     
     torch.set_float32_matmul_precision("medium")
 
-    # Set struct to False to allow for dynamic pop
-    OmegaConf.set_struct(cfg.model, False)
-    OmegaConf.set_struct(cfg.training, False)
+    model_config = OmegaConf.to_container(cfg.model)
+    training_config = OmegaConf.to_container(cfg.training)
+    data_config = OmegaConf.to_container(cfg.data)
 
-    model = FormulaNetLit( cfg.model, cfg.training)
+    model = FormulaNetLit( model_config, training_config)
     logging.log(logging.INFO, f"Model initialized.")
 
-    datamodule = MERDataModule(data_config=cfg.data)
+    datamodule = MERDataModule(data_config)
     logging.log(logging.INFO, f"Dataset initialized.")
 
     if cfg.trainer.profiler:
