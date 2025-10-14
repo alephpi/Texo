@@ -1,7 +1,8 @@
 from pathlib import Path
 from optimum.exporters.tasks import TasksManager
 from optimum.exporters.onnx import main_export
-from optimum.exporters.onnx.model_configs import ViTOnnxConfig
+from optimum.exporters.onnx.model_configs import ViTOnnxConfig, VisionEncoderDecoderOnnxConfig
+from optimum.exporters.onnx.base import ConfigBehavior
 from texo.model.formulanet import FormulaNet
 
 register_tasks_manager_onnx = TasksManager.create_register("onnx")
