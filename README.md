@@ -35,6 +35,8 @@ Texo is a distilled version of PPFormulaNet-S and finetuned on UniMERNet-1M, hen
 |                                   |                  | Edit distance | 0.0780 | 0.1042 | 0.1941 | 0.0995 |
 |     Texo-transfer<sup>*</sup>     | 20M<sup>**</sup> | BLEU          | 0.8597 | 0.8334 | 0.5549 | 0.7973 |
 |                                   |                  | Edit distance | 0.0980 | 0.1306 | 0.2187 | 0.0999 |
+|     Texo-transfer-onnx            |     as above     | BLEU          | 0.8395 | 0.8136 | 0.5153 | 0.7787 |
+|                                   |                  | Edit distance | 0.0980 | 0.1288 | 0.2050 | 0.0976 |
 
 We only list the lightweight version for the SOTA models, as we can see in terms of sequential metrics like BLEU or Edit distance, our model has comparable performance while reducing a lot of parameters. 
 
