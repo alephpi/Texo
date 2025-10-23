@@ -11,7 +11,7 @@ Texo is pronounced as /ˈtɛːkoʊ/
 
 <div align="center">
 
-  [Try it online](http://texo.netlify.app)
+  [Try it online](http://texocr.netlify.app)
 
 </div>
 
