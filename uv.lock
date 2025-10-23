@@ -1894,6 +1894,22 @@ wheels = [
 ]
 
 [[package]]
+name = "modelscope"
+version = "1.31.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "filelock" },
+    { name = "requests" },
+    { name = "setuptools" },
+    { name = "tqdm" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/7b/49c48e37b16528ca78ed5b5a077f0eeb9de653f34fcfcab35d5e5917d130/modelscope-1.31.0.tar.gz", hash = "sha256:7d0be3c898bc32b48b4f9cd1e98795bda32de1763f746c918f5ef34661a67661", size = 4440505, upload-time = "2025-10-15T09:39:07.856Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/a8/26bda5fdbcb9ad18c52d81961520b3b55bc082969a46dc8b18495ef7726b/modelscope-1.31.0-py3-none-any.whl", hash = "sha256:16fc2d4209d508cd8b511c07ef74d92531aa0ee1f4c303a19e0234f60a7371a9", size = 5923095, upload-time = "2025-10-15T09:39:04.686Z" },
+]
+
+[[package]]
 name = "more-itertools"
 version = "10.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3941,7 +3957,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/83/308a06d4775db8294d6d61bff518a7671f6855bbabac8db3c1c185a97de0/tensorboard_plugin_profile-2.20.6-cp313-none-macosx_12_0_arm64.whl", hash = "sha256:5cdce5f23bea61e28fc5f6f79b52c1d510ecfbbcf1fa667531982ddcbf178cd8", size = 3931, upload-time = "2025-08-20T02:39:06.366Z" },
     { url = "https://files.pythonhosted.org/packages/2e/d3/72b2b004e984951369ae9f314d4047223b78f9844977ba09e7eaf8dafe86/tensorboard_plugin_profile-2.20.6-cp313-none-manylinux2014_x86_64.whl", hash = "sha256:e780a1b875401deef8eb0d5c9204d0550642ade797ba118d46a2e1a9884595cf", size = 3935, upload-time = "2025-08-20T03:20:21.325Z" },
     { url = "https://files.pythonhosted.org/packages/2a/3c/2abc58eb6cf5e332212374392a38532640bc2fb55ae886c83bb2300fe23b/tensorboard_plugin_profile-2.20.6-cp313-none-win_amd64.whl", hash = "sha256:12ee0884b8eeb9c4be99d413912eb9fc4b5d9315abfca61650a83ada4cfaa12d", size = 3954, upload-time = "2025-08-20T02:55:56.604Z" },
-    { url = "https://files.pythonhosted.org/packages/6d/00/0e10f174a6bfbf69f212baa3df4ff2338e246fb2b5eac78370d2db7a9380/tensorboard_plugin_profile-2.20.6-py3-none-any.whl", hash = "sha256:6cc84a5f90b03bf32a3ed56968f990d26f435ca8319a92b766e7311e763c30a9", size = 3921, upload-time = "2025-08-20T03:21:38.383Z" },
 ]
 
 [[package]]
@@ -3987,6 +4002,7 @@ dev = [
     { name = "hydra-submitit-launcher" },
     { name = "jupyterlab" },
     { name = "matplotlib" },
+    { name = "modelscope" },
     { name = "omegaconf" },
     { name = "orjson" },
     { name = "pytest" },
@@ -4023,6 +4039,7 @@ dev = [
     { name = "hydra-submitit-launcher", specifier = ">=1.2.0" },
     { name = "jupyterlab", specifier = ">=4.4.5" },
     { name = "matplotlib", specifier = ">=3.10.6" },
+    { name = "modelscope", specifier = ">=1.31.0" },
     { name = "omegaconf", specifier = ">=2.3.0" },
     { name = "orjson", specifier = ">=3.11.3" },
     { name = "pytest", specifier = ">=8.4.1" },
@@ -4446,7 +4463,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/89/57/813732d1cf9dc6fe334b0b1e8baaa6469aa5fcae4d66d22cf0ca05ffd6a2/xprof-2.20.6-cp313-none-macosx_12_0_arm64.whl", hash = "sha256:472ddadb29e281f8c5be62531da4d98e052cb6f4a26a0470b97949ad1cfb6ee2", size = 13355049, upload-time = "2025-08-20T02:39:03.932Z" },
     { url = "https://files.pythonhosted.org/packages/fd/c4/75728d1b3150809b2240d0a84af32cf7e229889721be0f950dc3603927fe/xprof-2.20.6-cp313-none-manylinux2014_x86_64.whl", hash = "sha256:020ddfaff6ce3f5f63fb3ce1a2fe0287b9bc22b48ef8ebab81ebfd77bb164510", size = 14673017, upload-time = "2025-08-20T03:20:17.014Z" },
     { url = "https://files.pythonhosted.org/packages/d3/e3/f374ef14a5a80d7e115607a9dd3cbf6eccdc140d3dcee2eca2a48478e9d8/xprof-2.20.6-cp313-none-win_amd64.whl", hash = "sha256:afe872cedb276846e752de3914d3d20c802393ba562cbde7bacbbf82c77e1625", size = 13267059, upload-time = "2025-08-20T02:55:54.121Z" },
-    { url = "https://files.pythonhosted.org/packages/ae/79/2305feeefda12dd89ce6ca479fba09ed001b5a159568f2856321b4d9ccee/xprof-2.20.6-py3-none-any.whl", hash = "sha256:afbe24715d2888e16f899ba6232c0aec476fddc7115fd495a09f1e24ea301a03", size = 6246872, upload-time = "2025-08-20T03:21:35.194Z" },
 ]
 
 [[package]]

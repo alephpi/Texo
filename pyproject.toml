@@ -37,6 +37,7 @@ dev = [
     "torch-tb-profiler>=0.4.3",
     "torchinfo>=1.8.0",
     "viztracer>=1.0.4",
+    "modelscope>=1.31.0",
 ]
 
 [tool.uv.pip]
