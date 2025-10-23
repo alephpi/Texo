@@ -9,12 +9,18 @@ Texo is pronounced as /ˈtɛːkoʊ/
   A minimalist free and open-source SOTA LaTeX OCR model which contains only 20M parameters.
 </p>
 
+<div align="center">
+
+  [Try it online](http://texo.netlify.app)
+
+</div>
+
 ## Features
 - Free and open-source.
 - Fast and lightweight inference.
 - Trainable on consumer's-level GPU.
 - Well organized code as a tutorial.
-- Running in browser! (comming soon)
+- Running in browser!
 
 ## Prelude
 Despite a growing number of STEM and AI learners with their note-taking needs today, a free, fast, more accessible yet precise LaTeX OCR tool is still absent. Lying exactly in the comfort zone of machine learning due to the closed vocabulary and less generalization requirements, such classical pattern recognition task can be considered as solved thanks to recent deep learning progress(TrOCR, GOT-2.0, UniMERNet, PPFormulaNet). So here comes the Texo, which tackles this problem in the scope of a personal project.
@@ -131,6 +137,10 @@ Some beautiful loss curves to give you an impression of the loss scale and the c
 
 #### Learning rate
 <img src="./assets/learning_rate.png">
+
+## Reproduce the whole work
+
+If you want to start from scratch, check my [notes](./TechnoSelection/notes.md)
 
 ## Acknowledgements
 

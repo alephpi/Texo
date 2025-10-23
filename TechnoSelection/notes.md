@@ -105,7 +105,8 @@ In conclusion, we choose the PP-FormulaNet as our architecture, which has the be
   - [x] cluster running
 - [x] 6. Inference demo
 - [x] 7. Export to onnx
-- [ ] 8. Web App
+      - [ ] quantized version
+- [x] 8. Web App
 
 [optional] Synthetic paired data:
 1. Synthesize **smartly** latex math mode expressions.
