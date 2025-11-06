@@ -1,7 +1,10 @@
 from pathlib import Path
-from task import FormulaNetLit, PreTrainedTokenizerFast
-from transformers import AutoTokenizer, VisionEncoderDecoderModel
+
 from huggingface_hub import HfApi, create_repo, snapshot_download
+from transformers import AutoTokenizer, VisionEncoderDecoderModel
+
+from task import FormulaNetLit, PreTrainedTokenizerFast
+
 
 def load(path='model'):
     model: VisionEncoderDecoderModel = VisionEncoderDecoderModel.from_pretrained(path)
@@ -40,7 +43,7 @@ def pull(args):
         model_path = snapshot_download(
             repo_id=repo_id,
             local_dir="./model",
-            ignore_patterns=["checkpoints"]
+            ignore_patterns=["checkpoints/**"]
         )
 
 if __name__ == '__main__':
