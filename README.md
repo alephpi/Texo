@@ -11,7 +11,7 @@ Texo is pronounced as /ˈtɛːkoʊ/
 
 <div align="center">
 
-  [Try it online](http://texocr.netlify.app)
+  [Try it online](https://texocr.netlify.app)
 
 </div>
 
@@ -20,7 +20,7 @@ Texo is pronounced as /ˈtɛːkoʊ/
 - Fast and lightweight inference.
 - Trainable on consumer's-level GPU.
 - Well organized code as a tutorial.
-- Running in browser!
+- [Running in browser!](https://github.com/alephpi/Texo-web)
 
 ## Prelude
 Despite a growing number of STEM and AI learners with their note-taking needs today, a free, fast, more accessible yet precise LaTeX OCR tool is still absent. Lying exactly in the comfort zone of machine learning due to the closed vocabulary and less generalization requirements, such classical pattern recognition task can be considered as solved thanks to recent deep learning progress(TrOCR, GOT-2.0, UniMERNet, PPFormulaNet). So here comes the Texo, which tackles this problem in the scope of a personal project.
@@ -88,9 +88,7 @@ If you are lazy, use the one that I arranged and normalized.
 - https://huggingface.co/datasets/alephpi/UniMER-Train
 - https://huggingface.co/datasets/alephpi/UniMER-Test
 
-
 If you are interested in all the preprocessings, check [here](./data/tokenizer) and [here](./scripts/python/normalize.py), where I collected and sorted all the useful KaTeX commands.
-
 
 ### Launch
 We use `hydra` to manage training configurations and experiments.
