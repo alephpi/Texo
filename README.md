@@ -22,6 +22,11 @@ Texo is pronounced as /ˈtɛːkoʊ/
 - Well organized code as a tutorial.
 - [Running in browser!](https://github.com/alephpi/Texo-web)
 
+>[!Note]
+> Feel honored been collected in [@ruanyf's weekly](https://www.ruanyifeng.com/blog/2025/11/weekly-issue-372.html), if you are a user from there, and have an issue on visit the website, please leave a message in [Texo-web](https://github.com/alephpi/Texo-web) repo. Due to my limited front-end skills, please contribute to help me in any form.
+> 
+> 很荣幸被 [《阮一峰的科技周刊》](https://www.ruanyifeng.com/blog/2025/11/weekly-issue-372.html) 收录，如果你从那里过来，并且在访问 demo 网站时出现 bug，请移步至 [Texo-web](https://github.com/alephpi/Texo-web) 仓库报告。由于我前端水平有限，欢迎各位不吝赐教。
+
 ## Prelude
 Despite a growing number of STEM and AI learners with their note-taking needs today, a free, fast, more accessible yet precise LaTeX OCR tool is still absent. Lying exactly in the comfort zone of machine learning due to the closed vocabulary and less generalization requirements, such classical pattern recognition task can be considered as solved thanks to recent deep learning progress(TrOCR, GOT-2.0, UniMERNet, PPFormulaNet). So here comes the Texo, which tackles this problem in the scope of a personal project.
 
