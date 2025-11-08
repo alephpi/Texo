@@ -162,3 +162,7 @@ If you want to start from scratch, check my [notes](./TechnoSelection/notes.md)
 [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 
 Copyright (C) 2025-present Sicheng Mao <maosicheng98@gmail.com>
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=alephpi/Texo&type=date&legend=top-left)](https://www.star-history.com/#alephpi/Texo&type=date&legend=top-left)
