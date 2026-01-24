@@ -10,6 +10,8 @@ from transformers.optimization import get_cosine_with_min_lr_schedule_with_warmu
 from texo.model.formulanet import FormulaNet
 from texo.utils.scores import compute_bleu, compute_edit_distance
 
+import time
+
 
 class FormulaNetLit(LightningModule):
     def __init__(self, model_config, training_config):
@@ -26,6 +28,8 @@ class FormulaNetLit(LightningModule):
 
         self.optimizer = torch.optim.AdamW(self.model.parameters(), **self.training_config["optimizer"])
         self.scheduler = get_cosine_with_min_lr_schedule_with_warmup(self.optimizer, **self.training_config["lr_scheduler"])
+
+        self.time = 0
 
     def forward(self, pixel_values, decoder_input_ids, decoder_attention_mask, labels, **kwargs):
         # here we don't do token shift for labels, since the MBartForCausalLM behavior is different from RobertaForCausalLM or GPT2LMHeadModel
@@ -79,6 +83,15 @@ class FormulaNetLit(LightningModule):
         self.log("BLEU", bleu, on_step=False, on_epoch=True, logger=True)
         self.log("edit_distance", edit_distance, on_step=False, on_epoch=True, logger=True)
     
+    def on_test_epoch_start(self) -> None:
+        print("test epoch started.")
+        self.time = time.time()
+
+    def on_test_epoch_end(self) -> None:
+        self.time = time.time() - self.time
+        print(f"Test epoch time: {self.time} seconds")
+        print("test epoch ended.")
+
     def test_step(self, batch, batch_idx, dataloader_idx):
         # compute BLEU and edit distance
         labels = batch["labels"]
@@ -95,6 +108,24 @@ class FormulaNetLit(LightningModule):
         self.log(f"BLEU/{self.trainer.datamodule.test_dataset_names[dataloader_idx]}", bleu, on_step=False, on_epoch=True, logger=True)
         self.log(f"edit_distance/{self.trainer.datamodule.test_dataset_names[dataloader_idx]}", edit_distance, on_step=False, on_epoch=True, logger=True)
     
+    def predict_step(self, batch, batch_idx, dataloader_idx):
+        labels = batch["labels"]
+        batch_size = labels.shape[0]
+        max_length = labels.shape[-1] # in validation, since we know how long the ground truth is, we truncate to it to save computation.
+        labels[labels == -100] = self.model.config.pad_token_id
+        ref_str = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
+        outputs = self.generate(batch["pixel_values"], num_beams=1, do_sample=False, max_length=max_length)
+        # token_length = sum(len(output) for output in outputs)/labels.shape[0]  # average output token length
+        preds = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        results = []
+        for i in range(batch_size):
+            results.append({
+                "pred": preds[i],
+                "gt": ref_str[i],
+                # "token_length": len(outputs[i])
+            })
+        return results
+
     # def on_before_optimizer_step(self, optimizer: Optimizer) -> None:
     #     # log gradient norms
     #     norms = grad_norm(self.model.decoder, norm_type=2)
@@ -107,7 +138,6 @@ class FormulaNetLit(LightningModule):
     #     norms = grad_norm(self.model.decoder, norm_type=2)
     #     self.log_dict(norms)
     #     return
-
 
     def configure_optimizers(self):
         return {

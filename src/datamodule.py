@@ -38,7 +38,7 @@ class MERDataModule(LightningDataModule):
                                     image_processor=EvalMERImageProcessor(**self.data_config["image_processor"]),
                                     text_processor=TextProcessor(self.data_config["text_processor"])
                                     )
-        elif stage == "test":
+        elif stage in ["test", "predict"]:
             self.test_dataset_names = []
             self.test_datasets = []
             for test_dataset_path in Path(self.data_config["test_dataset_paths"]).iterdir():
@@ -115,3 +115,6 @@ class MERDataModule(LightningDataModule):
                                 collate_fn=test_dataset.collate_fn,
                                 ))
         return test_loaders
+    
+    def predict_dataloader(self):
+        return self.test_dataloader()

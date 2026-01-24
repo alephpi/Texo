@@ -9,6 +9,7 @@ text_processor_default_config = {
         "truncation": True,
         "return_tensors": "pt",
         "return_attention_mask": False,
+        "pad_to_multiple_of": 8,
     }
 }
 
