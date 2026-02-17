@@ -10,8 +10,13 @@ Texo is pronounced as /ˈtɛːkoʊ/
 </p>
 
 <div align="center">
-
+  
   [Try it online](https://texocr.netlify.app)
+  
+</div>
+<div align="center">
+  
+  [Technical report](https://hal.science/hal-05510395)
 
 </div>
 
