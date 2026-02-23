@@ -16,7 +16,7 @@ Texo is pronounced as /ˈtɛːkoʊ/
 </div>
 <div align="center">
   
-  [Technical report](https://hal.science/hal-05510395)
+  Technical report: [arXiv](https://arxiv.org/abs/2602.17189), [HAL](https://hal.science/hal-05510395)
 
 </div>
 
