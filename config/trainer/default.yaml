@@ -4,6 +4,7 @@ accelerator: gpu
 devices: 1
 num_nodes: 1
 precision: bf16-mixed
+accumulate_grad_batches: 1
 log_every_n_steps: 50
 max_epochs: 30
 val_check_interval: 1000
@@ -30,8 +31,11 @@ callbacks:
     logging_interval: "step"
 
 logger:
-  _target_: lightning.pytorch.loggers.TensorBoardLogger
-  save_dir: ${output_dir}
-  name: ""
-  version: ""
-  sub_dir: "tb_logs"
+  - _target_: lightning.pytorch.loggers.WandbLogger
+    project: texo-replication
+    save_dir: ${output_dir}
+  - _target_: lightning.pytorch.loggers.TensorBoardLogger
+    save_dir: ${output_dir}
+    name: ""
+    version: ""
+    sub_dir: "tb_logs"
