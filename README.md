@@ -168,6 +168,10 @@ If you want to start from scratch, check my [notes](./TechnoSelection/notes.md)
 
 Copyright (C) 2025-present Sicheng Mao <maosicheng98@gmail.com>
 
+## Authorization
+A limited, non-transferable LGPL-2.1 license is specially granted to Charlie for sole use within the macOS app [Texo OCR](https://github.com/zclk9000/texoocr) only.
+All other usages are subject to AGPL-3.0 by default.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=alephpi/Texo&type=date&legend=top-left)](https://www.star-history.com/#alephpi/Texo&type=date&legend=top-left)
