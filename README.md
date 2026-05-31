@@ -60,9 +60,12 @@ We only list the lightweight version for the SOTA models, as we can see in terms
 > 
 > &dagger;: Copy from the paper
 > 
-> *: Texo-distill uses the same tokenizer as UniMERNet and PPFormulaNet, hence the sequential metrics are strictly comparable. While Texo-transfer uses a customized tokenizer hence the metrics are not comparable (we have a shorter sequence length, see more in [notes](./TechnoSelection/notes.md)). Of course a more fair evaluation metric for LaTeX-OCR should be the [CDM](http://arxiv.org/abs/2409.03643), but I'm lazy to do it due to its implementation complexity.
+> *: Texo-distill uses the same tokenizer as UniMERNet and PPFormulaNet, hence the sequential metrics are strictly comparable. While Texo-transfer uses a customized tokenizer hence the metrics are not comparable (we have a shorter sequence length, see more in [notes](./TechnoSelection/notes.md)).
 > 
 > **: Slightly less than Texo-distill as the tokenizer's vocab is smaller.
+
+ <img width="2035" height="480" alt="image" src="https://github.com/user-attachments/assets/273e115a-4bbf-4a0f-a3d5-54746c417fa7" />
+
 
 ## Configure environment
 ```sh
