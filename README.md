@@ -179,4 +179,4 @@ All other usages are subject to AGPL-3.0 by default.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=alephpi/Texo&type=date&legend=top-left)](https://www.star-history.com/#alephpi/Texo&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=alephpi/Texo&type=date&legend=top-left)](https://star-history.dera.page/#alephpi/Texo&type=date&legend=top-left)
