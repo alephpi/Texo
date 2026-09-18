@@ -12,6 +12,12 @@ class HGNetv2OnnxConfig(ViTOnnxConfig):
     def inputs(self):
         return {"pixel_values": {0: "batch_size"}} # only dynamical axis is needed to list here
 
+    @property
+    def outputs(self):
+        # VisionEncoderDecoderOnnxConfig uses dynamic spatial input axes.
+        # Do not freeze H*W to the sequence length of the dummy export input.
+        return {"last_hidden_state": {0: "batch_size", 1: "encoder_sequence_length"}}
+
 def export_onnx():
     path='./model'
     out = Path("./model/trio_onnx")
