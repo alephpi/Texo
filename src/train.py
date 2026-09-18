@@ -4,8 +4,8 @@ import lightning as L
 import torch
 
 from datamodule import MERDataModule
-from texo.utils.config import DictConfig, OmegaConf, hydra
 from task import FormulaNetLit
+from texo.utils.config import DictConfig, OmegaConf, hydra
 
 
 @hydra.main(version_base="1.3.2",config_path="../config", config_name="train.yaml")

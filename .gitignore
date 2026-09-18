@@ -213,3 +213,5 @@ outputs
 model
 !demo.ipynb
 cdm
+*.sif
+*.pkl
