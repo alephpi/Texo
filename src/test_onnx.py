@@ -1,8 +1,9 @@
 from pathlib import Path
-from tqdm import tqdm
+
+import onnxruntime as ort
 import torch
 from optimum.onnxruntime import ORTModelForVision2Seq
-import onnxruntime as ort
+from tqdm import tqdm
 
 # 设置为只显示 Error 级别，忽略 Warning
 ort.set_default_logger_severity(3)  # 0=Verbose, 1=Info, 2=Warning, 3=Error, 4=Fatal
@@ -10,8 +11,8 @@ ort.set_default_logger_severity(3)  # 0=Verbose, 1=Info, 2=Warning, 3=Error, 4=F
 
 from texo.data.dataset import MERDatasetHF
 from texo.data.processor import EvalMERImageProcessor, TextProcessor
+from texo.model.formulanet import FormulaNet
 from texo.utils.scores import compute_bleu, compute_edit_distance
-from texo.utils.config import *
 
 test_dataset_paths = Path("./data/dataset/hf_datasets/UniMER-Test")
 test_dataset_names = []

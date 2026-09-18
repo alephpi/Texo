@@ -1,8 +1,9 @@
 from pathlib import Path
-from optimum.exporters.tasks import TasksManager
+
 from optimum.exporters.onnx import main_export
-from optimum.exporters.onnx.model_configs import ViTOnnxConfig, VisionEncoderDecoderOnnxConfig
-from optimum.exporters.onnx.base import ConfigBehavior
+from optimum.exporters.onnx.model_configs import ViTOnnxConfig
+from optimum.exporters.tasks import TasksManager
+
 from texo.model.formulanet import FormulaNet
 
 register_tasks_manager_onnx = TasksManager.create_register("onnx")
@@ -20,7 +21,7 @@ class HGNetv2OnnxConfig(ViTOnnxConfig):
 
 def export_onnx():
     path='./model'
-    out = Path("./model/trio_onnx")
+    out = Path("./model/onnx")
     out.mkdir(exist_ok=True)
     main_export(
         path,
@@ -29,11 +30,11 @@ def export_onnx():
     )
 
 if __name__ == '__main__':
-    import debugpy
-    try:
-        debugpy.listen(('localhost', 9501))
-        print('Waiting for debugger attach')
-        debugpy.wait_for_client()
-    except Exception as e:
-        pass
+    # import debugpy
+    # try:
+    #     debugpy.listen(('localhost', 9501))
+    #     print('Waiting for debugger attach')
+    #     debugpy.wait_for_client()
+    # except Exception as e:
+    #     pass
     export_onnx()
